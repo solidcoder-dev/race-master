@@ -5,14 +5,14 @@ import kotlin.math.*
 class ScoringService {
 
     fun calculateScore(
-        track: Track,
+        participant: Participant,
         raceRoute: RaceRoute,
         tolerance: Tolerance
     ): Score {
         var totalPoints = Score(0)
 
         for (waypoint in raceRoute.waypoints) {
-            val isHit = track.coordinates.any { coordinate ->
+            val isHit = participant.track.coordinates.any { coordinate ->
                 distanceInKm(waypoint.coordinate, coordinate) <= tolerance.distanceInKm
             }
             if (isHit) {

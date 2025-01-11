@@ -12,6 +12,7 @@ import org.picolobruno.racing.domain.Tolerance
 import org.picolobruno.racing.domain.Track
 import org.picolobruno.racing.domain.Waypoint
 
+// TODO: use instantio
 class ScoringServiceTest {
 
  private val scoringService = ScoringService()
