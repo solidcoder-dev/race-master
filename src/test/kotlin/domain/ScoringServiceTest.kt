@@ -4,13 +4,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import kotlin.math.abs
-import org.picolobruno.racing.domain.Coordinate
-import org.picolobruno.racing.domain.RaceRoute
-import org.picolobruno.racing.domain.Score
-import org.picolobruno.racing.domain.ScoringService
-import org.picolobruno.racing.domain.Tolerance
-import org.picolobruno.racing.domain.Track
-import org.picolobruno.racing.domain.Waypoint
 
 // TODO: use instantio
 class ScoringServiceTest {
