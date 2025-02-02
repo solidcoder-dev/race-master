@@ -1,33 +1,22 @@
 package org.picolobruno.racing
 
-import domain.entities.Route
-import domain.entities.RoutePoint
-import domain.entities.Track
-import domain.entities.TrackPoint
 import domain.services.DistanceStrategy
 import domain.services.HaversineDistanceStrategy
 import domain.services.TrackValidator
+import java.io.File
+import java.io.FileInputStream
+import org.picolobruno.racing.kml.application.KmlParser
 
 fun main() {
-    val route = Route(
-        points = listOf(
-            RoutePoint("Point A", 37.7749, -122.4194),
-            RoutePoint("Point B", 37.7750, -122.4195),
-            RoutePoint("Point C", 37.7751, -122.4196)
-        ),
-        start = RoutePoint("Start", 37.7748, -122.4193),
-        end = RoutePoint("End", 37.7752, -122.4197)
-    )
+    val kmlParser = KmlParser()
 
-    val track = Track(
-        listOf(
-            TrackPoint(1706792231000, 37.7748, -122.4193), // Start (valid)
-            TrackPoint(1706792232000, 37.7749, -122.4194), // Point A (valid)
-            TrackPoint(1706792233000, 37.7750, -122.4195), // Point B (valid)
-            TrackPoint(1706792234000, 37.7753, -122.4198), // Not matching any point
-            TrackPoint(1706792235000, 37.7752, -122.4197)  // End (valid)
-        )
-    )
+    // Parsing a Track
+    val trackInputStream = File("/Users/brunopicolo/dev/race-master/src/main/resources/ET1 TRACK NOMAD 2024.kml")
+    val track = kmlParser.parseTrack(FileInputStream(trackInputStream))
+
+    // Parsing a Route
+    val routeInputStream = File("/Users/brunopicolo/dev/race-master/src/main/resources/ET 1 WP NOMAD 2024.kml")
+    val route = kmlParser.parseRoute(FileInputStream(routeInputStream))
 
     val toleranceKm = 0.2
     val strategy: DistanceStrategy = HaversineDistanceStrategy()
@@ -46,5 +35,4 @@ fun main() {
         println("Route points missed:")
         result.missedPoints.forEach { println("- ${it.name} ❌") }
     }
-
 }

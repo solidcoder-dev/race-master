@@ -1,102 +1,129 @@
 package org.picolobruno.racing.kml.application
 
-import java.io.ByteArrayInputStream
+import domain.entities.Route
+import domain.entities.RoutePoint
+import domain.entities.Track
+import domain.entities.TrackPoint
 import java.io.InputStream
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.xml.parsers.DocumentBuilderFactory
-import org.picolobruno.racing.kml.domain.KmlDocument
-import org.picolobruno.racing.kml.domain.Placemark
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 
-// TODO: verify if the kml package is adapted to the DDD architecture (location, interaction, ...)
-
 class KmlParser {
 
-    fun parse(input: InputStream): KmlDocument {
-        val doc = parseXmlDocument(input)
-        val documentName = extractDocumentName(doc)
-        val placemarks = extractPlacemarks(doc)
-        return KmlDocument(
-            name = documentName,
-            placemarks = placemarks
+    fun parseTrack(kmlTrack: InputStream): Track {
+        val document = parseXml(kmlTrack)
+
+        val timestamps = extractTrackTimestamps(document)
+        val coordinates = extractTrackCoordinates(document)
+
+        if (timestamps.size != coordinates.size) {
+            println("Warning: Timestamps (${timestamps.size}) and Coordinates (${coordinates.size}) count mismatch.")
+        }
+
+        val trackPoints = mutableListOf<TrackPoint>()
+        val minSize = minOf(timestamps.size, coordinates.size) // Ensures no index out of bounds
+
+        for (i in 0 until minSize) {
+            trackPoints.add(TrackPoint(timestamps[i], coordinates[i].first, coordinates[i].second))
+        }
+
+        return Track(trackPoints)
+    }
+
+    private fun extractTrackTimestamps(document: Document): List<Long> {
+        val timestamps = mutableListOf<Long>()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+        dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+
+        val trainInfoNodes = document.getElementsByTagName("mwm:trainInfo")
+
+        for (i in 0 until trainInfoNodes.length) {
+            val trainInfoElement = trainInfoNodes.item(i) as? Element ?: continue
+            val pointNodes = trainInfoElement.getElementsByTagName("mwm:point")
+
+            for (j in 0 until pointNodes.length) {
+                val pointElement = pointNodes.item(j) as? Element ?: continue
+                val timestampNode = pointElement.getElementsByTagName("mwm:timestamp").item(0)
+
+                timestampNode?.textContent?.trim()?.let { timestampStr ->
+                    try {
+                        val date = dateFormat.parse(timestampStr)
+                        timestamps.add(date.time)
+                    } catch (e: Exception) {
+                        println("Skipping invalid timestamp: $timestampStr")
+                    }
+                }
+            }
+        }
+
+        return timestamps
+    }
+
+    private fun extractTrackCoordinates(document: Document): List<Pair<Double, Double>> {
+        val coordinateNodes = document.getElementsByTagName("coordinates")
+        val coordinates = mutableListOf<Pair<Double, Double>>()
+
+        for (i in 0 until coordinateNodes.length) {
+            val coordinatesText = coordinateNodes.item(i).textContent.trim()
+            val coordLines = coordinatesText.split(" ").filter { it.isNotBlank() }
+
+            for (coord in coordLines) {
+                val parts = coord.split(",")
+                if (parts.size >= 2) {
+                    val longitude = parts[0].toDoubleOrNull()
+                    val latitude = parts[1].toDoubleOrNull()
+                    if (longitude != null && latitude != null) {
+                        coordinates.add(Pair(latitude, longitude))
+                    }
+                }
+            }
+        }
+
+        return coordinates
+    }
+
+    private fun parseXml(inputStream: InputStream): Document {
+        val factory = DocumentBuilderFactory.newInstance()
+        val builder = factory.newDocumentBuilder()
+        return builder.parse(inputStream).apply { documentElement.normalize() }
+    }
+
+    fun parseRoute(kmlRoute: InputStream): Route {
+        val document = parseXml(kmlRoute)
+
+        val routePoints = extractRoutePoints(document)
+        if (routePoints.isEmpty()) {
+            throw IllegalArgumentException("Invalid KML: Route must contain at least one point.")
+        }
+
+        return Route(
+            points = routePoints,
+            start = routePoints.first(),
+            end = routePoints.last()
         )
     }
 
-    private fun parseXmlDocument(input: InputStream): Document {
-        val factory = DocumentBuilderFactory.newInstance()
-        factory.isNamespaceAware = false // ignoring namespaces for simplicity
+    private fun extractRoutePoints(document: Document): List<RoutePoint> {
+        val placemarks = document.getElementsByTagName("Placemark")
+        val points = mutableListOf<RoutePoint>()
 
-        val builder = factory.newDocumentBuilder()
-        val doc = builder.parse(input)
-        doc.documentElement.normalize()
+        for (i in 0 until placemarks.length) {
+            val placemark = placemarks.item(i) as? Element ?: continue
+            val name = placemark.getElementsByTagName("name").item(0)?.textContent ?: "Unknown"
 
-        return doc
-    }
+            val coordinatesText = placemark.getElementsByTagName("coordinates").item(0)?.textContent?.trim()
+            val coordinates = coordinatesText?.split(",") ?: continue
+            if (coordinates.size < 2) continue
 
-    private fun extractDocumentName(doc: Document): String {
-        val documentNodes = doc.getElementsByTagName("Document")
+            val longitude = coordinates[0].toDoubleOrNull() ?: continue
+            val latitude = coordinates[1].toDoubleOrNull() ?: continue
 
-        if (documentNodes.length == 0) {
-            return "NO_DOCUMENT_FOUND" // TODO: throw an exception?
+            points.add(RoutePoint(name, latitude, longitude))
         }
-
-        val documentElement = documentNodes.item(0) as Element
-        val nameNodes = documentElement.getElementsByTagName("name")
-
-        return if (nameNodes.length > 0) {
-            nameNodes.item(0).textContent
-        } else {
-            "NO_NAME_FOUND" // TODO: throw an exception??
-        }
+        return points
     }
 
-
-    private fun extractPlacemarks(doc: Document): List<Placemark> {
-        val placemarkList = mutableListOf<Placemark>()
-        val placemarkNodes = doc.getElementsByTagName("Placemark")
-
-        for (i in 0 until placemarkNodes.length) {
-            val placemarkElement = placemarkNodes.item(i) as? Element ?: continue
-
-            val name = extractPlacemarkName(placemarkElement)
-            val (longitude, latitude) = extractPlacemarkCoordinates(placemarkElement)
-
-            placemarkList.add(Placemark(name, longitude, latitude))
-        }
-
-        return placemarkList
-    }
-
-    private fun extractPlacemarkName(placemarkElement: Element): String {
-        val nameNodes = placemarkElement.getElementsByTagName("name")
-        if (nameNodes.length == 0) {
-            return "NO_NAME_FOUND"
-        }
-        return nameNodes.item(0).textContent.trim()
-    }
-
-    private fun extractPlacemarkCoordinates(placemarkElement: Element): Pair<Double, Double> {
-        val pointNodes = placemarkElement.getElementsByTagName("Point")
-        if (pointNodes.length == 0) return 0.0 to 0.0
-
-        val pointElement = pointNodes.item(0) as Element
-        val coordsNodes = pointElement.getElementsByTagName("coordinates")
-        if (coordsNodes.length == 0) return 0.0 to 0.0
-
-        val coordsText = coordsNodes.item(0).textContent.trim()
-        val parts = coordsText.split(",")
-        val longitude = parts.getOrNull(0)?.toDoubleOrNull() ?: 0.0
-        val latitude = parts.getOrNull(1)?.toDoubleOrNull() ?: 0.0
-
-        return longitude to latitude
-    }
-
-    companion object {
-        fun parse(kml: String): KmlDocument {
-            val parser = KmlParser()
-            return ByteArrayInputStream(kml.toByteArray()).use {
-                parser.parse(it)
-            }
-        }
-    }
 }
