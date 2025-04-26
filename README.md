@@ -80,8 +80,10 @@ It would help you build the first module fast and clean! 🚀
 
 ### Initial API definition
 
+```
 POST /auth/login
 POST /auth/register
+
 
 POST /users
 GET /users
@@ -114,3 +116,4 @@ PUT /participants/{participantId}/stages/{stageId}/track
 GET /participants/{participantId}/stages/{stageId}/track
 
 GET /participants/{participantId}/stages/{stageId}/waypoints
+```
