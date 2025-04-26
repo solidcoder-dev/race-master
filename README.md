@@ -121,4 +121,5 @@ GET /participants/{participantId}/stages/{stageId}/score
 GET /participants/{participantId}/score
 
 GET /rallies/{rallyId}/classification
+GET /rallies/{rallyId}/stages/{stageId}/classification
 ```
