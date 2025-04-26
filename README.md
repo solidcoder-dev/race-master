@@ -116,4 +116,9 @@ PUT /participants/{participantId}/stages/{stageId}/track
 GET /participants/{participantId}/stages/{stageId}/track
 
 GET /participants/{participantId}/stages/{stageId}/waypoints
+
+GET /participants/{participantId}/stages/{stageId}/score
+GET /participants/{participantId}/score
+
+GET /rallies/{rallyId}/classification
 ```
