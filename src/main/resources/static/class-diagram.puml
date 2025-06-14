@@ -1,0 +1,136 @@
+@startuml RallyRaidSchema
+
+' ENUMS
+enum auth_user_role {
+  ADMIN
+  competitor
+}
+enum auth_user_status {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+' ENTITIES
+
+class Profile {
+  +UUID id
+  +firstName: String
+  +lastName: String
+  nickname: String
+  phone: String
+  email: String
+  nationality: String
+  birthDate: Date
+  roles: List<String>
+  createdAt: Timestamp
+  updatedAt: Timestamp
+}
+
+class AuthUser {
+  +UUID id
+  externalId: String
+  email: String
+  username: String
+  passwordHash: String
+  role: auth_user_role
+  status: auth_user_status
+  createdAt: Timestamp
+  updatedAt: Timestamp
+}
+
+class Rally {
+  +UUID id
+  +name: String
+  description: Text
+  +startDate: Date
+  +endDate: Date
+  published: Boolean
+  isPublic: Boolean
+  createdAt: Timestamp
+  updatedAt: Timestamp
+}
+
+class Stage {
+  +UUID id
+  +name: String
+  +date: Date
+  roadbookFileUrl: Text
+  createdAt: Timestamp
+}
+
+class Waypoint {
+  +UUID id
+  +name: String
+  +latitude: Decimal
+  +longitude: Decimal
+  +radiusMeters: Integer
+  mandatory: Boolean
+  sequence: Integer
+  createdAt: Timestamp
+}
+
+class Competitor {
+  +UUID id
+  +name: String
+  +vehicleType: String
+  teamName: String
+  category: String
+  subcategory: String
+  createdAt: Timestamp
+}
+
+class CrewMember {
+  +competitorId: UUID
+  +profileId: UUID
+}
+
+class CompetitorStageTrack {
+  +UUID id
+  trackFileUrl: Text
+  uploadTime: Timestamp
+}
+
+class WaypointPass {
+  +UUID id
+  passed: Boolean
+  distanceMeters: Decimal
+}
+
+class StageScore {
+  +UUID id
+  waypointsPassed: Integer
+  waypointsMissed: Integer
+  penaltiesMinutes: Integer
+  finalStageScore: Decimal
+  isFinal: Boolean
+  createdAt: Timestamp
+}
+
+class GeneralScore {
+  +UUID id
+  totalStagesCompleted: Integer
+  waypointsPassedTotal: Integer
+  waypointsMissedTotal: Integer
+  totalPenaltiesMinutes: Integer
+  finalGeneralScore: Decimal
+  isFinal: Boolean
+  createdAt: Timestamp
+}
+
+' RELATIONSHIPS
+
+Rally "1" -- "0..*" Stage : has
+Stage "1" -- "0..*" Waypoint : contains
+Rally "1" -- "0..*" Competitor : includes
+Competitor "1" -- "0..*" CompetitorStageTrack : uploads
+Competitor "1" -- "0..1" GeneralScore : summary
+Competitor "1" -- "0..*" StageScore : per stage
+Competitor "1" -- "0..*" CrewMember : has
+Profile "1" -- "0..*" CrewMember : assigned
+CompetitorStageTrack "1" -- "0..*" WaypointPass : result
+Stage "1" -- "0..*" CompetitorStageTrack
+Stage "1" -- "0..*" StageScore
+AuthUser "0..1" -- "0..1" Profile
+
+@enduml
