@@ -1,0 +1,623 @@
+openapi: 3.0.3
+info:
+  title: Rally Raid API
+  version: 1.0.0
+  description: API for managing rally raid events, competitors, stages, uploads, scoring, and classifications.
+
+servers:
+  - url: https://api.example.com
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    Profile:
+      type: object
+      required:
+        - id
+        - firstName
+        - lastName
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        nickname:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        nationality:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        roles:
+          type: array
+          items:
+            type: string
+            description: e.g. "driver", "copilot", "mechanic"
+
+    Rally:
+      type: object
+      required:
+        - id
+        - name
+        - startDate
+        - endDate
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+
+    Stage:
+      type: object
+      required:
+        - id
+        - rallyId
+        - name
+        - date
+      properties:
+        id:
+          type: string
+          format: uuid
+        rallyId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        date:
+          type: string
+          format: date
+
+    Competitor:
+      type: object
+      required:
+        - id
+        - rallyId
+        - name
+        - vehicleType
+        - category
+      properties:
+        id:
+          type: string
+          format: uuid
+        rallyId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        vehicleType:
+          type: string
+        teamName:
+          type: string
+        category:
+          type: string
+        subcategory:
+          type: string
+
+    RoadbookInfo:
+      type: object
+      properties:
+        stageId:
+          type: string
+        roadbookUrl:
+          type: string
+
+    TrackInfo:
+      type: object
+      properties:
+        competitorId:
+          type: string
+        stageId:
+          type: string
+        trackUrl:
+          type: string
+        uploadTime:
+          type: string
+          format: date-time
+
+    WaypointPass:
+      type: object
+      properties:
+        waypointId:
+          type: string
+        name:
+          type: string
+        passed:
+          type: boolean
+        distanceMeters:
+          type: number
+          format: float
+
+    StageScore:
+      type: object
+      properties:
+        competitorId:
+          type: string
+        stageId:
+          type: string
+        waypointsPassed:
+          type: integer
+        waypointsMissed:
+          type: integer
+        penaltiesMinutes:
+          type: integer
+        score:
+          type: number
+          format: float
+
+    GeneralScore:
+      type: object
+      properties:
+        competitorId:
+          type: string
+        totalStagesCompleted:
+          type: integer
+        waypointsPassedTotal:
+          type: integer
+        waypointsMissedTotal:
+          type: integer
+        totalPenaltiesMinutes:
+          type: integer
+        score:
+          type: number
+          format: float
+
+
+    Classification:
+      type: object
+      properties:
+        rallyId:
+          type: string
+        classification:
+          type: array
+          items:
+            type: object
+            properties:
+              competitorId:
+                type: string
+              name:
+                type: string
+              score:
+                type: number
+                format: float
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  /profiles:
+    post:
+      summary: Create a new profile
+      tags: [Profiles]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+      responses:
+        '201':
+          description: Profile created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+
+    get:
+      summary: List all profiles
+      tags: [Profiles]
+      responses:
+        '200':
+          description: List of profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Profile'
+
+  /profiles/{profileId}:
+    get:
+      summary: Get profile details
+      tags: [Profiles]
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Profile details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+
+    put:
+      summary: Update a profile
+      tags: [Profiles]
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+
+    delete:
+      summary: Delete a profile
+      tags: [Profiles]
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Profile deleted
+
+  /rallies:
+    post:
+      summary: Create a rally
+      tags: [Rallies]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Rally'
+      responses:
+        '201':
+          description: Rally created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rally'
+
+    get:
+      summary: List all rallies
+      tags: [Rallies]
+      responses:
+        '200':
+          description: List of rallies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Rally'
+
+  /rallies/{rallyId}:
+    get:
+      summary: Get rally details
+      tags: [Rallies]
+      parameters:
+        - name: rallyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rally details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rally'
+
+  /rallies/{rallyId}/publish:
+    post:
+      summary: Publish a rally
+      tags: [Rallies]
+      parameters:
+        - name: rallyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rally published successfully
+
+  /rallies/{rallyId}/stages:
+    post:
+      summary: Create a stage
+      tags: [Stages]
+      parameters:
+        - name: rallyId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Stage'
+      responses:
+        '201':
+          description: Stage created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stage'
+
+    get:
+      summary: List all stages
+      tags: [Stages]
+      parameters:
+        - name: rallyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of stages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stage'
+
+  /rallies/{rallyId}/stages/{stageId}/roadbook:
+    post:
+      summary: Upload roadbook
+      tags: [Roadbooks]
+      parameters:
+        - name: rallyId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: stageId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Roadbook uploaded
+
+    get:
+      summary: Get roadbook info
+      tags: [Roadbooks]
+      parameters:
+        - name: rallyId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: stageId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Roadbook metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoadbookInfo'
+
+  /rallies/{rallyId}/competitors:
+    post:
+      summary: Register a competitor
+      tags: [Competitors]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Competitor'
+      responses:
+        '201':
+          description: competitor created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Competitor'
+
+    get:
+      summary: List all competitors
+      tags: [Competitors]
+      responses:
+        '200':
+          description: List of competitors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Competitor'
+
+  /rallies/{rallyId}/competitors/{competitorId}/stages/{stageId}/track:
+    post:
+      summary: Upload competitor track
+      tags: [Tracks]
+      parameters:
+        - name: competitorId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: stageId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Track uploaded
+
+    put:
+      summary: Replace competitor track
+      tags: [Tracks]
+      parameters:
+        - name: competitorId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: stageId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Track replaced
+
+  /rallies/{rallyId}/competitors/{competitorId}/stages/{stageId}/waypoints:
+    get:
+      summary: Get waypoint results
+      tags: [Waypoints]
+      parameters:
+        - name: competitorId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: stageId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Waypoint pass results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WaypointPass'
+
+  /rallies/{rallyId}/competitors/{competitorId}/stages/{stageId}/score:
+    get:
+      summary: Get competitor stage score
+      tags: [Scores]
+      parameters:
+        - name: competitorId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: stageId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stage score
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StageScore'
+
+  /rallies/{rallyId}/competitors/{competitorId}/score:
+    get:
+      summary: Get competitor general score
+      tags: [Scores]
+      parameters:
+        - name: competitorId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: General rally score
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralScore'
+
+  /rallies/{rallyId}/classification:
+    get:
+      summary: Get rally final classification
+      tags: [Classification]
+      parameters:
+        - name: rallyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Final rally results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Classification'
