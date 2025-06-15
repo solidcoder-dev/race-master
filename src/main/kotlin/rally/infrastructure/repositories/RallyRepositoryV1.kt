@@ -13,9 +13,11 @@ import java.util.UUID
 class RallyRepositoryV1(
     private val jpa: JpaRepository<RallyEntity, UUID>,
 ): RallyRepository {
-    override fun save(rally: Rally) : Rally =
+    override fun save(rally: Rally) : Result<Rally> = runCatching {
         jpa.save(rally.toEntity()).toDomain()
+    }
 
-    override fun findAll(): List<Rally> =
+    override fun findAll(): Result<List<Rally>> = runCatching {
         jpa.findAll().map { it.toDomain() }
+    }
 }

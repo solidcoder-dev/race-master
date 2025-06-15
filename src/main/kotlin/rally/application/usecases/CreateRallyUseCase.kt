@@ -6,29 +6,39 @@ import org.picolobruno.racing.rally.application.mappers.toDto
 import org.picolobruno.racing.rally.domain.objects.Rally
 import org.picolobruno.racing.rally.domain.repositories.RallyRepository
 import org.springframework.stereotype.Component
-import java.util.*
+
+sealed interface CreateRallyResult {
+    data class Success(val dto: RallyDto) : CreateRallyResult
+    data class InvalidInput(val reason: String) : CreateRallyResult
+    object RepositoryFailure : CreateRallyResult
+}
 
 interface CreateRallyUseCase {
-    fun execute(command: CreateRallyCommand): RallyDto
+    fun execute(command: CreateRallyCommand): CreateRallyResult
 }
 
 @Component
 class CreateRallyUseCaseV1(
     private val repository: RallyRepository
 ) : CreateRallyUseCase {
-    override fun execute(command: CreateRallyCommand): RallyDto {
-        require(command.startDate.isBefore(command.endDate)) {
-            "Start date must be before end date"
-        }
 
-        val rally = Rally(
-            id = UUID.randomUUID(),
-            name = command.name,
-            description = command.description,
-            startDate = command.startDate,
-            endDate = command.endDate
+    override fun execute(command: CreateRallyCommand): CreateRallyResult {
+        val rallyResult = Rally.new(
+            command.name,
+            command.description,
+            command.startDate,
+            command.endDate
         )
-        val result = repository.save(rally)
-        return result.toDto()
+
+        return rallyResult.fold(::persist, ::invalidInput)
     }
+
+    private fun persist(rally: Rally): CreateRallyResult =
+        repository.save(rally).fold(
+            onSuccess = { CreateRallyResult.Success(it.toDto()) },
+            onFailure = { CreateRallyResult.RepositoryFailure }
+        )
+
+    private fun invalidInput(error: Throwable): CreateRallyResult =
+        CreateRallyResult.InvalidInput(error.message ?: "Invalid rally data")
 }
