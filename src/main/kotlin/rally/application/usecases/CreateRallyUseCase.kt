@@ -4,7 +4,7 @@ import org.picolobruno.racing.rally.api.dtos.RallyDto
 import org.picolobruno.racing.rally.application.commands.CreateRallyCommand
 import org.picolobruno.racing.rally.application.mappers.toDto
 import org.picolobruno.racing.rally.domain.objects.Rally
-import org.picolobruno.racing.rally.domain.repositories.RallyRepository
+import org.picolobruno.racing.rally.domain.repositories.SaveRally
 import org.springframework.stereotype.Component
 
 sealed interface CreateRallyResult {
@@ -19,7 +19,7 @@ interface CreateRallyUseCase {
 
 @Component
 class CreateRallyUseCaseV1(
-    private val repository: RallyRepository
+    private val saver: SaveRally
 ) : CreateRallyUseCase {
 
     override fun execute(command: CreateRallyCommand): CreateRallyResult {
@@ -34,7 +34,7 @@ class CreateRallyUseCaseV1(
     }
 
     private fun persist(rally: Rally): CreateRallyResult =
-        repository.save(rally).fold(
+        saver.save(rally).fold(
             onSuccess = { CreateRallyResult.Success(it.toDto()) },
             onFailure = { CreateRallyResult.RepositoryFailure }
         )

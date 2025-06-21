@@ -3,7 +3,7 @@ package org.picolobruno.racing.rally.application.usecases
 import org.picolobruno.racing.rally.api.dtos.RallyDto
 import org.picolobruno.racing.rally.application.mappers.toDto
 import org.picolobruno.racing.rally.domain.objects.Rally
-import org.picolobruno.racing.rally.domain.repositories.RallyRepository
+import org.picolobruno.racing.rally.domain.repositories.FindAllRallies
 import org.springframework.stereotype.Component
 
 sealed interface ListRalliesResult {
@@ -17,11 +17,11 @@ interface ListRalliesUseCase {
 
 @Component
 class ListRalliesUseCaseV1(
-    private val repository: RallyRepository
+    private val rallyFinder: FindAllRallies
 ) : ListRalliesUseCase {
 
     override fun execute(): ListRalliesResult =
-        repository.findAll()
+        rallyFinder.findAll()
             .fold(
                 {ListRalliesResult.Success(it.map(Rally::toDto)) },
                 { ListRalliesResult.RepositoryFailure("Failed to load rallies") }
