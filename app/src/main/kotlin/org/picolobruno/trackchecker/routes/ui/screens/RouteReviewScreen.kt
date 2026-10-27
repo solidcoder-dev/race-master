@@ -79,6 +79,13 @@ fun RouteReviewScreen(
                 TextButton(onClick = { scope.launch { sheetScaffold.bottomSheetState.expand() } }) {
                     Text("Ver todos los puntos")
                 }
+                Button(
+                    onClick = onValidate,
+                    enabled = route.status != RouteStatus.READY,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(if (route.status == RouteStatus.READY) "Ruta lista" else "Validar ruta")
+                }
                 LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 360.dp)) {
                     items(route.points, key = { it.id.value }) { point ->
                         Row(
@@ -95,13 +102,6 @@ fun RouteReviewScreen(
                         }
                         HorizontalDivider()
                     }
-                }
-                Button(
-                    onClick = onValidate,
-                    enabled = route.status != RouteStatus.READY,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(if (route.status == RouteStatus.READY) "Ruta lista" else "Validar ruta")
                 }
             }
         }

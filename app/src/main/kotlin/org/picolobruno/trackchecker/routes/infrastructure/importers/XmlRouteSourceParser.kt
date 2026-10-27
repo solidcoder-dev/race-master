@@ -34,8 +34,10 @@ class XmlRouteSourceParser : RouteSourceParser {
             setFeature("http://xml.org/sax/features/external-parameter-entities", false)
             isXIncludeAware = false
             isExpandEntityReferences = false
-            setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "")
-            setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "")
+            // Android's XMLConstants API omits these desktop Java fields.
+            // Keep DTD rejection mandatory; extra JAXP attributes are best effort.
+            runCatching { setAttribute("http://javax.xml.XMLConstants/property/accessExternalDTD", "") }
+            runCatching { setAttribute("http://javax.xml.XMLConstants/property/accessExternalSchema", "") }
         }
         val document = factory.newDocumentBuilder().parse(ByteArrayInputStream(bytes))
         val root = document.documentElement?.localName?.lowercase(Locale.ROOT)
