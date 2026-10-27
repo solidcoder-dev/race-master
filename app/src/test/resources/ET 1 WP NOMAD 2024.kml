@@ -1,0 +1,1012 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://earth.google.com/kml/2.2">
+<Document>
+  <Style id="placemark-red">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-red.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="placemark-blue">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-blue.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="placemark-purple">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-purple.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="placemark-yellow">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-yellow.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="placemark-pink">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-pink.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="placemark-brown">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-brown.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="placemark-green">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-green.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="placemark-orange">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-orange.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="placemark-deeppurple">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-deeppurple.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="placemark-lightblue">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-lightblue.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="placemark-cyan">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-cyan.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="placemark-teal">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-teal.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="placemark-lime">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-lime.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="placemark-deeporange">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-deeporange.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="placemark-gray">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-gray.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <Style id="placemark-bluegray">
+    <IconStyle>
+      <Icon>
+        <href>http://maps.me/placemarks/placemark-bluegray.png</href>
+      </Icon>
+    </IconStyle>
+  </Style>
+  <name>ET 1 WP NOMAD 2024.kml</name>
+  <visibility>0</visibility>
+  <ExtendedData xmlns:mwm="https://maps.me">
+    <mwm:name>
+      <mwm:lang code="default">ET 1 WP NOMAD 2024.kml</mwm:lang>
+    </mwm:name>
+    <mwm:annotation>
+    </mwm:annotation>
+    <mwm:description>
+    </mwm:description>
+    <mwm:lastModified>2024-12-25T10:34:17.356Z</mwm:lastModified>
+    <mwm:accessRules>Local</mwm:accessRules>
+  </ExtendedData>
+  <Placemark>
+    <name>CP1</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0600646,33.383061</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">CP1</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">CP1</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>META_ET1</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0413897,32.919376</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">META_ET1</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">META_ET1</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>SALIDA ET1</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.2438827,33.776443</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">SALIDA ET1</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">SALIDA ET1</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP01</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.2348927,33.775121</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP01</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP01</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP02</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.2118297,33.754056</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP02</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP02</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP03</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.2006958,33.668613</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP03</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP03</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP04</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0963602,33.615338</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP04</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP04</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP04</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.1577436,33.625574</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP04</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP04</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP05</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0860116,33.610615</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP05</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP05</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP06</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0731494,33.617476</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP06</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP06</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP07</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0621876,33.614508</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP07</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP07</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP08</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.03476,33.603973</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP08</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP08</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP09</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0254658,33.594734</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP09</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP09</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP10</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0206894,33.583859</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP10</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP10</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP11</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0360112,33.570044</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP11</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP11</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP12</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0423694,33.552794</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP12</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP12</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP13</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.067042,33.551019</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP13</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP13</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP14</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0945947,33.543261</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP14</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP14</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP15</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0949434,33.520381</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP15</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP15</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP16</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0585783,33.461742</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP16</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP16</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP17</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.1047867,33.428196</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP17</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP17</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP18</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0980916,33.403803</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP18</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP18</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP19</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0914303,33.393327</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP19</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP19</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP20</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0301321,33.342457</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP20</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP20</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP21</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.982238,33.310362</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP21</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP21</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP22</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9680115,33.2855</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP22</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP22</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP23</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9540318,33.2906</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP23</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP23</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP24</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9418355,33.255945</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP24</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP24</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP25</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9564706,33.226535</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP25</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP25</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP26</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9707594,33.214942</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP26</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP26</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP27</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9689781,33.214966</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP27</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP27</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP28</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9641522,33.206749</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP28</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP28</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP29</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9473458,33.203762</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP29</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP29</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP30</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9268711,33.182525</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP30</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP30</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP31</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9394014,33.149353</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP31</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP31</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP32</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9165527,33.129641</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP32</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP32</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP33</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9082542,33.102163</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP33</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP33</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP34</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.8878017,33.083722</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP34</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP34</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP35</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.8870759,33.070949</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP35</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP35</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP36</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.8870638,33.05437</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP36</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP36</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP37</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9027607,33.05416</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP37</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP37</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP38</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9761007,33.019006</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP38</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP38</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP39</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9852162,33.022975</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP39</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP39</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP40</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0037878,33.048045</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP40</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP40</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP41</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.030912,33.051598</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP41</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP41</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP42</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0445597,33.025928</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP42</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP42</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP43</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0456467,33.01937</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP43</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP43</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP44</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.041377,33.012615</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP44</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP44</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP45</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0421974,33.001637</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP45</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP45</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP46</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0326688,32.993363</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP46</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP46</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP47</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0200437,32.995279</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP47</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP47</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP48</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.012396,32.97172</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP48</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP48</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP49</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0368078,32.945323</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP49</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP49</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WP50</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0514758,32.930327</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WP50</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WP50</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WPE8</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9544033,33.208879</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WPE8</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WPE8</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WPE7</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0941451,33.617761</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WPE7</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WPE7</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WPE6</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.988638,33.329117</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WPE6</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WPE6</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WPE5</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-4.9268517,33.095594</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WPE5</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WPE5</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WPE1</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.248819,33.699341</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WPE1</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WPE1</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WPE2</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.1993544,33.767554</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WPE2</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WPE2</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WPE3</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.1883992,33.741744</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WPE3</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WPE3</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>WPE4</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.1881501,33.752638</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">WPE4</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">WPE4</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+  <Placemark>
+    <name>CP2</name>
+    <styleUrl>#placemark-red</styleUrl>
+    <Point><coordinates>-5.0436874,33.028366</coordinates></Point>
+    <ExtendedData xmlns:mwm="https://maps.me">
+      <mwm:name>
+        <mwm:lang code="default">CP2</mwm:lang>
+      </mwm:name>
+      <mwm:customName>
+        <mwm:lang code="default">CP2</mwm:lang>
+      </mwm:customName>
+      <mwm:visibility>1</mwm:visibility>
+    </ExtendedData>
+  </Placemark>
+</Document>
+</kml>

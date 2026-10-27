@@ -1,0 +1,23 @@
+package org.picolobruno.trackchecker.routes.infrastructure
+
+import android.content.Context
+import androidx.room.Room
+import org.picolobruno.trackchecker.routes.application.usecases.RouteUseCases
+import org.picolobruno.trackchecker.routes.application.usecases.routeUseCases
+import org.picolobruno.trackchecker.routes.infrastructure.importers.XmlRouteSourceParser
+import org.picolobruno.trackchecker.routes.infrastructure.persistence.RoomRouteRepository
+import org.picolobruno.trackchecker.routes.infrastructure.persistence.RoutesDatabase
+
+/** Single-process composition root. Nothing leaks into the pure domain model. */
+class RoutesContainer(context: Context) {
+    private val database = Room.databaseBuilder(
+        context.applicationContext,
+        RoutesDatabase::class.java,
+        "track-checker-routes.db"
+    ).build()
+
+    val useCases: RouteUseCases = routeUseCases(
+        repository = RoomRouteRepository(database),
+        parser = XmlRouteSourceParser()
+    )
+}
