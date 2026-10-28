@@ -20,7 +20,7 @@ jobs:
       - name: Compile and test
         run: ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:assembleDebugAndroidTest --no-daemon
       - name: Print generated Room schema for versioning
-        run: find app/schemas -type f -name '1.json' -exec cat {} \\;
+        run: find app/schemas -type f -name '1.json' -exec cat {} +
       - name: Upload Room schema
         uses: actions/upload-artifact@v4
         with:
