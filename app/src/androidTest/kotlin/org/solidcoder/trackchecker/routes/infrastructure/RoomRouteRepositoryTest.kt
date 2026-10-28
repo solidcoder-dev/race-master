@@ -53,7 +53,7 @@ class RoomRouteRepositoryTest {
         sqlite.execSQL(
             "CREATE TABLE point_links (id INTEGER PRIMARY KEY, pointId TEXT NOT NULL REFERENCES route_points(id) ON DELETE CASCADE)"
         )
-        sqlite.execSQL("INSERT INTO point_links (id, pointId) VALUES (?, ?)", arrayOf(1, linkedPointId))
+        sqlite.execSQL("INSERT INTO point_links (id, pointId) VALUES (?, ?)", arrayOf<Any?>(1, linkedPointId))
 
         repository.save(original.rename("Nueva etapa"))
         repository.save(original.renamePoint(original.points[1].id, "WP04 actualizado"))

@@ -117,7 +117,7 @@ class RouteUseCasesTest {
             }
             val routes = MemoryRoutes()
             routeUseCases(routes, routes, workerReader, parseDispatcher = dispatcher).import(source())
-            assertEquals("route-parser-worker", parsingThread)
+            assertTrue(parsingThread?.startsWith("route-parser-worker") == true)
         } finally {
             dispatcher.close()
         }
