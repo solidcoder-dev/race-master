@@ -8,7 +8,6 @@ enum class RouteIssueCode {
 data class RouteIssue(
     val code: RouteIssueCode,
     val severity: IssueSeverity,
-    val message: String,
     val pointIds: List<RoutePointId> = emptyList()
 )
 

@@ -1,7 +1,7 @@
 package org.solidcoder.trackchecker.routes.domain.model
 
 enum class RoutePointType {
-    START, FINISH, WAYPOINT, EXIT_WAYPOINT, CHECKPOINT, OTHER
+    START, FINISH, WAYPOINT, ECLIPSE_WAYPOINT, CHECKPOINT, OTHER
 }
 
 data class RoutePoint(

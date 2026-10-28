@@ -1,39 +1,46 @@
 package org.solidcoder.trackchecker.routes.domain
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertThrows
+import org.junit.Assert.*
 import org.junit.Test
-import org.solidcoder.trackchecker.routes.domain.model.Coordinates
-import org.solidcoder.trackchecker.routes.domain.model.Route
-import org.solidcoder.trackchecker.routes.domain.model.RouteId
-import org.solidcoder.trackchecker.routes.domain.model.RoutePoint
-import org.solidcoder.trackchecker.routes.domain.model.RoutePointId
-import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
-import org.solidcoder.trackchecker.routes.domain.model.RouteStatus
+import org.solidcoder.trackchecker.routes.domain.model.*
 
 class RouteTest {
-    private val first = RoutePoint(RoutePointId("p1"), "WP04", Coordinates(28.0, -15.0), RoutePointType.WAYPOINT)
-    private val second = RoutePoint(RoutePointId("p2"), "WP04", Coordinates(28.1, -15.1), RoutePointType.WAYPOINT)
-    private fun route() = Route.imported(RouteId("r1"), "Etapa 1", listOf(first, second), 100L)
+    private val start = RoutePoint(RoutePointId("start"), "Salida", Coordinates(28.0, -15.0), RoutePointType.START)
+    private val waypoint = RoutePoint(RoutePointId("wp"), "WP04", Coordinates(28.1, -15.1), RoutePointType.WAYPOINT)
+    private val duplicate = RoutePoint(RoutePointId("wp2"), "WP04", Coordinates(28.2, -15.2), RoutePointType.WAYPOINT)
+    private val finish = RoutePoint(RoutePointId("finish"), "Meta", Coordinates(28.3, -15.3), RoutePointType.FINISH)
+
+    private fun route() = Route.imported(RouteId("r1"), "Etapa 1", listOf(start, waypoint, duplicate, finish), 100L)
 
     @Test fun `duplicate names do not collapse distinct points`() {
-        assertEquals(2, route().points.size)
-        assertNotEquals(route().points[0].id, route().points[1].id)
+        assertEquals(4, route().points.size)
+        assertNotEquals(route().points[1].id, route().points[2].id)
     }
 
     @Test fun `renaming a point preserves its identity and the original route`() {
         val original = route()
-        val renamed = original.renamePoint(first.id, "Barranco")
-        assertEquals("WP04", original.points.first().name)
-        assertEquals("Barranco", renamed.points.first().name)
-        assertEquals(first.id, renamed.points.first().id)
-        assertEquals(second, renamed.points.last())
+        val renamed = original.renamePoint(waypoint.id, "Barranco")
+        assertEquals("WP04", original.points[1].name)
+        assertEquals("Barranco", renamed.points[1].name)
+        assertEquals(waypoint.id, renamed.points[1].id)
+        assertEquals(duplicate, renamed.points[2])
     }
 
     @Test fun `editing a ready route requires revalidation`() {
-        val ready = route().markReady(org.solidcoder.trackchecker.routes.domain.model.RouteValidation(emptyList()))
-        assertEquals(RouteStatus.DRAFT, ready.changePointType(first.id, RoutePointType.START).status)
+        val ready = route().markReady()
+        assertEquals(RouteStatus.READY, ready.status)
+        assertEquals(RouteStatus.DRAFT, ready.changePointType(waypoint.id, RoutePointType.CHECKPOINT).status)
+    }
+
+    @Test fun `a route without start or finish cannot become ready`() {
+        val invalid = Route.imported(RouteId("invalid"), "Etapa", listOf(waypoint), 100L)
+        assertThrows(IllegalArgumentException::class.java) { invalid.markReady() }
+    }
+
+    @Test fun `a route with multiple starts cannot become ready`() {
+        val extraStart = start.copy(id = RoutePointId("extra"))
+        val invalid = Route.imported(RouteId("invalid"), "Etapa", listOf(start, extraStart, finish), 100L)
+        assertThrows(IllegalArgumentException::class.java) { invalid.markReady() }
     }
 
     @Test fun `unknown point cannot be edited`() {
