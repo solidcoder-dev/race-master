@@ -1,0 +1,29 @@
+package org.solidcoder.trackchecker.routes.application.usecases
+
+import kotlinx.coroutines.flow.Flow
+import org.solidcoder.trackchecker.routes.application.ports.RouteImportSource
+import org.solidcoder.trackchecker.routes.domain.model.Route
+import org.solidcoder.trackchecker.routes.domain.model.RouteId
+import org.solidcoder.trackchecker.routes.domain.model.RoutePointId
+import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
+import org.solidcoder.trackchecker.routes.domain.model.RouteValidation
+
+data class EditRoutePointDetails(
+    val routeId: RouteId,
+    val pointId: RoutePointId,
+    val name: String,
+    val type: RoutePointType
+)
+
+fun interface ObserveRoutesUseCase { operator fun invoke(): Flow<List<Route>> }
+fun interface GetRouteUseCase { suspend operator fun invoke(id: RouteId): Route? }
+fun interface ImportRouteUseCase { suspend operator fun invoke(source: RouteImportSource): Route }
+fun interface RenameRouteUseCase { suspend operator fun invoke(id: RouteId, newName: String) }
+fun interface EditRoutePointDetailsUseCase {
+    suspend operator fun invoke(details: EditRoutePointDetails)
+}
+/** Returns issues without changing the stored route. */
+fun interface ValidateRouteUseCase { suspend operator fun invoke(id: RouteId): RouteValidation }
+/** Attempts to mark the route READY, returning issues when it cannot be confirmed. */
+fun interface MarkRouteReadyUseCase { suspend operator fun invoke(id: RouteId): RouteValidation }
+fun interface DeleteRouteUseCase { suspend operator fun invoke(id: RouteId) }
