@@ -1,6 +1,7 @@
 package org.solidcoder.trackchecker.routes.application.usecases
 
-import org.solidcoder.trackchecker.routes.application.ports.RouteSourceParser
+import org.solidcoder.trackchecker.routes.application.ports.RouteCatalog
+import org.solidcoder.trackchecker.routes.application.ports.RouteSourceReader
 import org.solidcoder.trackchecker.routes.domain.model.*
 import org.solidcoder.trackchecker.routes.domain.repositories.RouteRepository
 import org.solidcoder.trackchecker.routes.domain.services.RouteValidator
@@ -10,21 +11,23 @@ data class RouteUseCases(
     val get: GetRouteUseCase,
     val import: ImportRouteUseCase,
     val rename: RenameRouteUseCase,
-    val updatePoint: UpdateRoutePointUseCase,
+    val editPoint: EditRoutePointDetailsUseCase,
     val validate: ValidateRouteUseCase,
+    val markReady: MarkRouteReadyUseCase,
     val delete: DeleteRouteUseCase
 )
 
 fun routeUseCases(
     repository: RouteRepository,
-    parser: RouteSourceParser,
+    catalog: RouteCatalog,
+    reader: RouteSourceReader,
     validator: RouteValidator = RouteValidator(),
     clock: () -> Long = System::currentTimeMillis
 ): RouteUseCases = RouteUseCases(
-    observe = ObserveRoutesUseCase { repository.observe() },
+    observe = ObserveRoutesUseCase { catalog.observeRoutes() },
     get = GetRouteUseCase { repository.findById(it) },
-    import = ImportRouteUseCase { fileName, content ->
-        val importedPoints = parser.parse(fileName, content)
+    import = ImportRouteUseCase { source ->
+        val importedPoints = reader.read(source)
         require(importedPoints.isNotEmpty()) { "El archivo no contiene puntos de ruta" }
         val points = importedPoints.mapIndexed { index, item ->
             RoutePoint(
@@ -34,7 +37,7 @@ fun routeUseCases(
                 type = item.type
             )
         }
-        val routeName = fileName.substringBeforeLast('.').trim().ifBlank { "Nueva ruta" }
+        val routeName = source.fileName.substringBeforeLast('.').trim().ifBlank { "Nueva ruta" }
         val route = Route.imported(RouteId.new(), routeName, points, clock())
         repository.save(route)
         route
@@ -43,15 +46,20 @@ fun routeUseCases(
         val route = repository.findById(id) ?: error("Ruta no encontrada")
         repository.save(route.rename(name))
     },
-    updatePoint = UpdateRoutePointUseCase { id, pointId, name, type ->
-        val route = repository.findById(id) ?: error("Ruta no encontrada")
-        repository.save(route.renamePoint(pointId, name).changePointType(pointId, type))
+    editPoint = EditRoutePointDetailsUseCase { details ->
+        val route = repository.findById(details.routeId) ?: error("Ruta no encontrada")
+        repository.save(route.renamePoint(details.pointId, details.name)
+            .changePointType(details.pointId, details.type))
     },
     validate = ValidateRouteUseCase { id ->
         val route = repository.findById(id) ?: error("Ruta no encontrada")
-        val result = validator.validate(route)
-        if (result.canBeReady) repository.save(route.markReady(result))
-        result
+        validator.validate(route)
+    },
+    markReady = MarkRouteReadyUseCase { id ->
+        val route = repository.findById(id) ?: error("Ruta no encontrada")
+        val validation = validator.validate(route)
+        if (validation.canBeReady) repository.save(route.markReady())
+        validation
     },
     delete = DeleteRouteUseCase { repository.delete(it) }
 )

@@ -8,7 +8,7 @@ import org.solidcoder.trackchecker.routes.infrastructure.importers.XmlRouteSourc
 import org.solidcoder.trackchecker.routes.infrastructure.persistence.RoomRouteRepository
 import org.solidcoder.trackchecker.routes.infrastructure.persistence.RoutesDatabase
 
-/** Single-process composition root. Nothing leaks into the pure domain model. */
+/** Single-process composition root; the domain has no Android or Room dependencies. */
 class RoutesContainer(context: Context) {
     private val database = Room.databaseBuilder(
         context.applicationContext,
@@ -16,8 +16,11 @@ class RoutesContainer(context: Context) {
         "track-checker-routes.db"
     ).build()
 
+    private val repository = RoomRouteRepository(database)
+
     val useCases: RouteUseCases = routeUseCases(
-        repository = RoomRouteRepository(database),
-        parser = XmlRouteSourceParser()
+        repository = repository,
+        catalog = repository,
+        reader = XmlRouteSourceParser()
     )
 }

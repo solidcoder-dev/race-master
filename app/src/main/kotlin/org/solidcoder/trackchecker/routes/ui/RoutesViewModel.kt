@@ -9,11 +9,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.solidcoder.trackchecker.routes.application.usecases.RouteUseCases
 import org.solidcoder.trackchecker.routes.domain.model.*
-import org.solidcoder.trackchecker.routes.domain.services.RouteValidator
+import org.solidcoder.trackchecker.routes.application.ports.RouteImportSource
+import org.solidcoder.trackchecker.routes.application.usecases.EditRoutePointDetails
 
 class RoutesViewModel(
-    private val actions: RouteUseCases,
-    private val validator: RouteValidator = RouteValidator()
+    private val actions: RouteUseCases
 ) : ViewModel() {
     private val mutableRoutes = MutableStateFlow(RoutesUiState())
     val routes: StateFlow<RoutesUiState> = mutableRoutes
@@ -33,11 +33,11 @@ class RoutesViewModel(
         viewModelScope.launch { load(id) }
     }
 
-    fun import(fileName: String, bytes: ByteArray, onImported: (RouteId) -> Unit) {
+    fun import(source: RouteImportSource, onImported: (RouteId) -> Unit) {
         mutableRoutes.update { it.copy(importing = true, error = null) }
         viewModelScope.launch {
             try {
-                val route = actions.import(fileName, bytes)
+                val route = actions.import(source)
                 load(route.id)
                 onImported(route.id)
             } catch (error: Exception) {
@@ -53,10 +53,10 @@ class RoutesViewModel(
     }
 
     fun updatePoint(id: RouteId, pointId: RoutePointId, name: String, type: RoutePointType) =
-        change(id) { actions.updatePoint(id, pointId, name, type) }
+        change(id) { actions.editPoint(EditRoutePointDetails(id, pointId, name, type)) }
 
-    fun validate(id: RouteId) = change(id) {
-        actions.validate(id)
+    fun markReady(id: RouteId) = change(id) {
+        actions.markReady(id)
     }
 
     fun delete(id: RouteId, onDeleted: () -> Unit) {
@@ -94,7 +94,7 @@ class RoutesViewModel(
         val route = actions.get(id)
         mutableReview.value = RouteReviewUiState(
             route = route,
-            issues = route?.let { validator.validate(it).issues }.orEmpty()
+            issues = route?.let { actions.validate(id).issues }.orEmpty()
         )
     }
 

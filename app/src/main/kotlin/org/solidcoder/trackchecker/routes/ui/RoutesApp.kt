@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import org.solidcoder.trackchecker.routes.application.usecases.RouteUseCases
+import org.solidcoder.trackchecker.routes.application.ports.RouteImportSource
 import org.solidcoder.trackchecker.routes.domain.model.RouteId
 import org.solidcoder.trackchecker.routes.ui.screens.RoutesListScreen
 import org.solidcoder.trackchecker.routes.ui.screens.RouteReviewScreen
@@ -32,7 +33,7 @@ fun RoutesApp(actions: RouteUseCases) {
         if (uri != null) scope.launch {
             try {
                 val (fileName, bytes) = readSelectedRoute(context.contentResolver, uri)
-                viewModel.import(fileName, bytes) { selectedRouteId = it.value }
+                viewModel.import(RouteImportSource(fileName, bytes)) { selectedRouteId = it.value }
             } catch (error: Exception) {
                 viewModel.report(error)
             }
@@ -67,7 +68,7 @@ fun RoutesApp(actions: RouteUseCases) {
                 onEdit = { pointId, name, type ->
                     viewModel.updatePoint(RouteId(selectedRouteId!!), pointId, name, type)
                 },
-                onValidate = { viewModel.validate(RouteId(selectedRouteId!!)) }
+                onMarkReady = { viewModel.markReady(RouteId(selectedRouteId!!)) }
             )
         }
     }

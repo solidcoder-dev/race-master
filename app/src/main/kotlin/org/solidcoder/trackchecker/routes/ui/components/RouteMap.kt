@@ -1,4 +1,4 @@
-package org.solidcoder.trackchecker.routes.ui.screens
+package org.solidcoder.trackchecker.routes.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

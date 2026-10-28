@@ -5,11 +5,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.solidcoder.trackchecker.routes.domain.model.*
 import org.solidcoder.trackchecker.routes.domain.repositories.RouteRepository
+import org.solidcoder.trackchecker.routes.application.ports.RouteCatalog
 
-class RoomRouteRepository(private val database: RoutesDatabase) : RouteRepository {
+class RoomRouteRepository(private val database: RoutesDatabase) : RouteRepository, RouteCatalog {
     private val dao = database.routes()
 
-    override fun observe(): Flow<List<Route>> = dao.observe().map { rows ->
+    override fun observeRoutes(): Flow<List<Route>> = dao.observe().map { rows ->
         rows.map { it.toDomain() }
     }
 

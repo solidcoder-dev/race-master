@@ -1,5 +1,7 @@
 package org.solidcoder.trackchecker.routes.domain.model
 
+import org.solidcoder.trackchecker.routes.domain.services.RouteValidator
+
 enum class RouteStatus { DRAFT, READY }
 
 /**
@@ -49,8 +51,8 @@ class Route private constructor(
     fun changePointType(pointId: RoutePointId, newType: RoutePointType): Route =
         editPoint(pointId) { it.changeType(newType) }
 
-    fun markReady(validation: RouteValidation): Route {
-        require(validation.canBeReady) { "A route with blocking issues cannot be ready" }
+    fun markReady(): Route {
+        require(RouteValidator().validate(this).canBeReady) { "A route with blocking issues cannot be ready" }
         return Route(id, name, points, RouteStatus.READY, importedAtEpochMs)
     }
 

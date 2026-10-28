@@ -7,7 +7,8 @@ import java.util.zip.ZipInputStream
 import javax.xml.XMLConstants
 import javax.xml.parsers.DocumentBuilderFactory
 import org.solidcoder.trackchecker.routes.application.ports.ImportedPoint
-import org.solidcoder.trackchecker.routes.application.ports.RouteSourceParser
+import org.solidcoder.trackchecker.routes.application.ports.RouteSourceReader
+import org.solidcoder.trackchecker.routes.application.ports.RouteImportSource
 import org.solidcoder.trackchecker.routes.domain.model.Coordinates
 import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
 import org.w3c.dom.Element
@@ -17,8 +18,10 @@ import org.w3c.dom.Node
  * Imports route points only. Track geometries are intentionally ignored.
  * Parsing of source XML happens behind the application port, never in domain.
  */
-class XmlRouteSourceParser : RouteSourceParser {
-    override fun parse(fileName: String, content: ByteArray): List<ImportedPoint> {
+class XmlRouteSourceParser : RouteSourceReader {
+    override fun read(source: RouteImportSource): List<ImportedPoint> {
+        val fileName = source.fileName
+        val content = source.content
         require(content.size <= MAX_FILE_BYTES) { "El archivo supera 10 MB" }
         val extension = fileName.substringAfterLast('.', "").lowercase(Locale.ROOT)
         val bytes = when (extension) {
@@ -81,7 +84,7 @@ class XmlRouteSourceParser : RouteSourceParser {
             normalized.startsWith("SALIDA") || normalized.startsWith("START") -> RoutePointType.START
             normalized.startsWith("META") || normalized.startsWith("FINISH") ||
                 normalized.startsWith("LLEGADA") -> RoutePointType.FINISH
-            normalized.startsWith("WPE") -> RoutePointType.EXIT_WAYPOINT
+            normalized.startsWith("WPE") -> RoutePointType.ECLIPSE_WAYPOINT
             normalized.startsWith("CP") -> RoutePointType.CHECKPOINT
             normalized.startsWith("WP") -> RoutePointType.WAYPOINT
             else -> RoutePointType.OTHER
