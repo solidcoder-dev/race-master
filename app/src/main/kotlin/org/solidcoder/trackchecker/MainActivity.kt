@@ -1,4 +1,4 @@
-package org.picolobruno.trackchecker
+package org.solidcoder.trackchecker
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
