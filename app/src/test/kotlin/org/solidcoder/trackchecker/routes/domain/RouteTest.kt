@@ -1,16 +1,16 @@
-package org.picolobruno.trackchecker.routes.domain
+package org.solidcoder.trackchecker.routes.domain
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
-import org.picolobruno.trackchecker.routes.domain.model.Coordinates
-import org.picolobruno.trackchecker.routes.domain.model.Route
-import org.picolobruno.trackchecker.routes.domain.model.RouteId
-import org.picolobruno.trackchecker.routes.domain.model.RoutePoint
-import org.picolobruno.trackchecker.routes.domain.model.RoutePointId
-import org.picolobruno.trackchecker.routes.domain.model.RoutePointType
-import org.picolobruno.trackchecker.routes.domain.model.RouteStatus
+import org.solidcoder.trackchecker.routes.domain.model.Coordinates
+import org.solidcoder.trackchecker.routes.domain.model.Route
+import org.solidcoder.trackchecker.routes.domain.model.RouteId
+import org.solidcoder.trackchecker.routes.domain.model.RoutePoint
+import org.solidcoder.trackchecker.routes.domain.model.RoutePointId
+import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
+import org.solidcoder.trackchecker.routes.domain.model.RouteStatus
 
 class RouteTest {
     private val first = RoutePoint(RoutePointId("p1"), "WP04", Coordinates(28.0, -15.0), RoutePointType.WAYPOINT)
@@ -32,7 +32,7 @@ class RouteTest {
     }
 
     @Test fun `editing a ready route requires revalidation`() {
-        val ready = route().markReady(org.picolobruno.trackchecker.routes.domain.model.RouteValidation(emptyList()))
+        val ready = route().markReady(org.solidcoder.trackchecker.routes.domain.model.RouteValidation(emptyList()))
         assertEquals(RouteStatus.DRAFT, ready.changePointType(first.id, RoutePointType.START).status)
     }
 

@@ -1,7 +1,7 @@
-package org.picolobruno.trackchecker.routes.ui
+package org.solidcoder.trackchecker.routes.ui
 
-import org.picolobruno.trackchecker.routes.domain.model.Route
-import org.picolobruno.trackchecker.routes.domain.model.RouteIssue
+import org.solidcoder.trackchecker.routes.domain.model.Route
+import org.solidcoder.trackchecker.routes.domain.model.RouteIssue
 
 data class RoutesUiState(
     val routes: List<Route> = emptyList(),

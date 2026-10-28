@@ -1,4 +1,4 @@
-package org.picolobruno.trackchecker.routes.domain.model
+package org.solidcoder.trackchecker.routes.domain.model
 
 enum class IssueSeverity { ERROR, WARNING }
 enum class RouteIssueCode {

@@ -1,8 +1,8 @@
-package org.picolobruno.trackchecker.routes.domain.repositories
+package org.solidcoder.trackchecker.routes.domain.repositories
 
 import kotlinx.coroutines.flow.Flow
-import org.picolobruno.trackchecker.routes.domain.model.Route
-import org.picolobruno.trackchecker.routes.domain.model.RouteId
+import org.solidcoder.trackchecker.routes.domain.model.Route
+import org.solidcoder.trackchecker.routes.domain.model.RouteId
 
 interface RouteRepository {
     fun observe(): Flow<List<Route>>

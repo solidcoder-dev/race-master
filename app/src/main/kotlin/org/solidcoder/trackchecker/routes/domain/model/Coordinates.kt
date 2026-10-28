@@ -1,4 +1,4 @@
-package org.picolobruno.trackchecker.routes.domain.model
+package org.solidcoder.trackchecker.routes.domain.model
 
 data class Coordinates(val latitude: Double, val longitude: Double) {
     init {

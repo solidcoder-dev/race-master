@@ -1,11 +1,11 @@
-package org.picolobruno.trackchecker.routes.domain
+package org.solidcoder.trackchecker.routes.domain
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.picolobruno.trackchecker.routes.domain.model.*
-import org.picolobruno.trackchecker.routes.domain.services.RouteValidator
+import org.solidcoder.trackchecker.routes.domain.model.*
+import org.solidcoder.trackchecker.routes.domain.services.RouteValidator
 
 class RouteValidatorTest {
     private fun point(id: String, name: String, type: RoutePointType) =

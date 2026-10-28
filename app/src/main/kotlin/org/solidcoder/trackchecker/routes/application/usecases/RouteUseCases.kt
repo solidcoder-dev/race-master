@@ -1,11 +1,11 @@
-package org.picolobruno.trackchecker.routes.application.usecases
+package org.solidcoder.trackchecker.routes.application.usecases
 
 import kotlinx.coroutines.flow.Flow
-import org.picolobruno.trackchecker.routes.domain.model.Route
-import org.picolobruno.trackchecker.routes.domain.model.RouteId
-import org.picolobruno.trackchecker.routes.domain.model.RoutePointId
-import org.picolobruno.trackchecker.routes.domain.model.RoutePointType
-import org.picolobruno.trackchecker.routes.domain.model.RouteValidation
+import org.solidcoder.trackchecker.routes.domain.model.Route
+import org.solidcoder.trackchecker.routes.domain.model.RouteId
+import org.solidcoder.trackchecker.routes.domain.model.RoutePointId
+import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
+import org.solidcoder.trackchecker.routes.domain.model.RouteValidation
 
 fun interface ObserveRoutesUseCase { operator fun invoke(): Flow<List<Route>> }
 fun interface GetRouteUseCase { suspend operator fun invoke(id: RouteId): Route? }

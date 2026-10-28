@@ -1,11 +1,11 @@
-package org.picolobruno.trackchecker.routes.domain.services
+package org.solidcoder.trackchecker.routes.domain.services
 
-import org.picolobruno.trackchecker.routes.domain.model.IssueSeverity
-import org.picolobruno.trackchecker.routes.domain.model.Route
-import org.picolobruno.trackchecker.routes.domain.model.RouteIssue
-import org.picolobruno.trackchecker.routes.domain.model.RouteIssueCode
-import org.picolobruno.trackchecker.routes.domain.model.RoutePointType
-import org.picolobruno.trackchecker.routes.domain.model.RouteValidation
+import org.solidcoder.trackchecker.routes.domain.model.IssueSeverity
+import org.solidcoder.trackchecker.routes.domain.model.Route
+import org.solidcoder.trackchecker.routes.domain.model.RouteIssue
+import org.solidcoder.trackchecker.routes.domain.model.RouteIssueCode
+import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
+import org.solidcoder.trackchecker.routes.domain.model.RouteValidation
 
 class RouteValidator {
     fun validate(route: Route): RouteValidation {
