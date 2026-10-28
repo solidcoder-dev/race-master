@@ -1,0 +1,54 @@
+package org.solidcoder.trackchecker.routes.infrastructure.persistence
+
+import androidx.room.withTransaction
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import org.solidcoder.trackchecker.routes.domain.model.*
+import org.solidcoder.trackchecker.routes.domain.repositories.RouteRepository
+
+class RoomRouteRepository(private val database: RoutesDatabase) : RouteRepository {
+    private val dao = database.routes()
+
+    override fun observe(): Flow<List<Route>> = dao.observe().map { rows ->
+        rows.map { it.toDomain() }
+    }
+
+    override suspend fun findById(id: RouteId): Route? = dao.findById(id.value)?.toDomain()
+
+    override suspend fun save(route: Route) {
+        database.withTransaction {
+            dao.upsertRoute(
+                RouteRecord(route.id.value, route.name, route.status.name, route.importedAtEpochMs)
+            )
+            dao.removePoints(route.id.value)
+            dao.insertPoints(route.points.mapIndexed { index, point ->
+                RoutePointRecord(
+                    id = point.id.value,
+                    routeId = route.id.value,
+                    sequence = index,
+                    name = point.name,
+                    latitude = point.coordinates.latitude,
+                    longitude = point.coordinates.longitude,
+                    type = point.type.name
+                )
+            })
+        }
+    }
+
+    override suspend fun delete(id: RouteId) = dao.deleteRoute(id.value)
+
+    private fun RouteWithPoints.toDomain(): Route = Route.restore(
+        id = RouteId(route.id),
+        name = route.name,
+        points = points.sortedBy(RoutePointRecord::sequence).map { record ->
+            RoutePoint(
+                id = RoutePointId(record.id),
+                name = record.name,
+                coordinates = Coordinates(record.latitude, record.longitude),
+                type = RoutePointType.valueOf(record.type)
+            )
+        },
+        status = RouteStatus.valueOf(route.status),
+        importedAtEpochMs = route.importedAtEpochMs
+    )
+}

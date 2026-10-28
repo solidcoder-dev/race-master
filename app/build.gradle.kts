@@ -6,13 +6,13 @@ plugins {
 }
 
 android {
-    namespace = "org.picolobruno.trackchecker"
-    compileSdk = 35
+    namespace = "org.solidcoder.trackchecker"
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "org.picolobruno.trackchecker"
+        applicationId = "org.solidcoder.trackchecker"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
