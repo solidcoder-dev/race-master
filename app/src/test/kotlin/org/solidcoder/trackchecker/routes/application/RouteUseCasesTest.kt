@@ -1,5 +1,7 @@
 package org.solidcoder.trackchecker.routes.application
 
+import java.util.concurrent.Executors
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
@@ -101,5 +103,23 @@ class RouteUseCasesTest {
         actions.delete(first.id)
         assertNull(actions.get(first.id))
         assertNotNull(actions.get(second.id))
+    }
+
+    @Test fun `parsing runs on the configured worker dispatcher`() = runBlocking {
+        val dispatcher = Executors.newSingleThreadExecutor { task ->
+            Thread(task, "route-parser-worker")
+        }.asCoroutineDispatcher()
+        try {
+            var parsingThread: String? = null
+            val workerReader = RouteSourceReader {
+                parsingThread = Thread.currentThread().name
+                listOf(ImportedPoint("WP1", Coordinates(28.0, -15.0), RoutePointType.WAYPOINT))
+            }
+            val routes = MemoryRoutes()
+            routeUseCases(routes, routes, workerReader, parseDispatcher = dispatcher).import(source())
+            assertEquals("route-parser-worker", parsingThread)
+        } finally {
+            dispatcher.close()
+        }
     }
 }

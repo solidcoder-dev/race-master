@@ -18,7 +18,7 @@ class RoutesViewModel(
     private val mutableRoutes = MutableStateFlow(RoutesUiState())
     val routes: StateFlow<RoutesUiState> = mutableRoutes
 
-    private val mutableReview = MutableStateFlow(RouteReviewUiState())
+    private val mutableReview = MutableStateFlow<RouteReviewUiState>(RouteReviewUiState.Loading)
     val review: StateFlow<RouteReviewUiState> = mutableReview
 
     init {
@@ -30,7 +30,16 @@ class RoutesViewModel(
     }
 
     fun open(id: RouteId) {
-        viewModelScope.launch { load(id) }
+        mutableReview.value = RouteReviewUiState.Loading
+        viewModelScope.launch {
+            try {
+                load(id)
+            } catch (error: Exception) {
+                mutableReview.value = RouteReviewUiState.Failed(
+                    error.message ?: "No se pudo cargar la ruta"
+                )
+            }
+        }
     }
 
     fun import(source: RouteImportSource, onImported: (RouteId) -> Unit) {
@@ -63,7 +72,7 @@ class RoutesViewModel(
         viewModelScope.launch {
             try {
                 actions.delete(id)
-                mutableReview.value = RouteReviewUiState()
+                mutableReview.value = RouteReviewUiState.NotFound
                 onDeleted()
             } catch (error: Exception) {
                 report(error)
@@ -92,10 +101,11 @@ class RoutesViewModel(
 
     private suspend fun load(id: RouteId) {
         val route = actions.get(id)
-        mutableReview.value = RouteReviewUiState(
-            route = route,
-            issues = route?.let { actions.validate(id).issues }.orEmpty()
-        )
+        mutableReview.value = if (route == null) {
+            RouteReviewUiState.NotFound
+        } else {
+            RouteReviewUiState.Loaded(route, actions.validate(id).issues)
+        }
     }
 
     companion object {

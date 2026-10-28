@@ -1,5 +1,9 @@
 package org.solidcoder.trackchecker.routes.application.usecases
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
 import org.solidcoder.trackchecker.routes.application.ports.RouteCatalog
 import org.solidcoder.trackchecker.routes.application.ports.RouteSourceReader
 import org.solidcoder.trackchecker.routes.domain.model.*
@@ -22,12 +26,14 @@ fun routeUseCases(
     catalog: RouteCatalog,
     reader: RouteSourceReader,
     validator: RouteValidator = RouteValidator(),
-    clock: () -> Long = System::currentTimeMillis
+    clock: () -> Long = System::currentTimeMillis,
+    parseDispatcher: CoroutineDispatcher = Dispatchers.Default
 ): RouteUseCases = RouteUseCases(
     observe = ObserveRoutesUseCase { catalog.observeRoutes() },
     get = GetRouteUseCase { repository.findById(it) },
     import = ImportRouteUseCase { source ->
-        val importedPoints = reader.read(source)
+        // XML decoding can be CPU-intensive; suspend alone does not switch dispatchers.
+        val importedPoints = withContext(parseDispatcher) { reader.read(source) }
         require(importedPoints.isNotEmpty()) { "El archivo no contiene puntos de ruta" }
         val points = importedPoints.mapIndexed { index, item ->
             RoutePoint(

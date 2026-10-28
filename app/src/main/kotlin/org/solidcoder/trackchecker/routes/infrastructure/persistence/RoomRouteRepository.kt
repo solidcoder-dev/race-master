@@ -21,8 +21,8 @@ class RoomRouteRepository(private val database: RoutesDatabase) : RouteRepositor
             dao.upsertRoute(
                 RouteRecord(route.id.value, route.name, route.status.name, route.importedAtEpochMs)
             )
-            dao.removePoints(route.id.value)
-            dao.insertPoints(route.points.mapIndexed { index, point ->
+            // Points retain their identity across route and point edits.
+            dao.upsertPoints(route.points.mapIndexed { index, point ->
                 RoutePointRecord(
                     id = point.id.value,
                     routeId = route.id.value,

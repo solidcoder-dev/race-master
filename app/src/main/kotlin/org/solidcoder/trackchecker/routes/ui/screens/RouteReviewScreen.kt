@@ -27,13 +27,24 @@ fun RouteReviewScreen(
     onMarkReady: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val route = state.route
-    if (route == null) {
-        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+    val loaded = when (state) {
+        RouteReviewUiState.Loading -> {
+            Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+            return
         }
-        return
+        RouteReviewUiState.NotFound -> {
+            RouteReviewUnavailable("Esta ruta ya no existe", onBack, modifier)
+            return
+        }
+        is RouteReviewUiState.Failed -> {
+            RouteReviewUnavailable(state.message, onBack, modifier)
+            return
+        }
+        is RouteReviewUiState.Loaded -> state
     }
+    val route = loaded.route
 
     var editingPointId by remember(route.id) { mutableStateOf<RoutePointId?>(null) }
     val selectedPoint = route.points.firstOrNull { it.id == editingPointId }
@@ -56,13 +67,13 @@ fun RouteReviewScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    "${route.points.size} puntos · ${state.issues.size} incidencias",
+                    "${route.points.size} puntos · ${loaded.issues.size} incidencias",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 RouteIssues(
                     route = route,
-                    issues = state.issues,
+                    issues = loaded.issues,
                     onSelectPoint = { editingPointId = it }
                 )
                 TextButton(onClick = { scope.launch { sheetScaffold.bottomSheetState.expand() } }) {
@@ -111,5 +122,18 @@ fun RouteReviewScreen(
                 editingPointId = null
             }
         )
+    }
+}
+
+@Composable
+private fun RouteReviewUnavailable(message: String, onBack: () -> Unit, modifier: Modifier) {
+    Column(
+        modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(message, style = MaterialTheme.typography.bodyLarge)
+        Spacer(Modifier.height(16.dp))
+        Button(onClick = onBack) { Text("Volver a mis rutas") }
     }
 }

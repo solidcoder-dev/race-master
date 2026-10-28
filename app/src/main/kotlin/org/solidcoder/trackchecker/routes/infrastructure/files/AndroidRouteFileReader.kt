@@ -1,4 +1,4 @@
-package org.solidcoder.trackchecker.routes.ui
+package org.solidcoder.trackchecker.routes.infrastructure.files
 
 import android.content.ContentResolver
 import android.net.Uri
@@ -6,10 +6,11 @@ import android.provider.OpenableColumns
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.solidcoder.trackchecker.routes.application.ports.RouteImportSource
 
-/** Copy imported data into the app immediately: no lasting URI grant is required. */
-suspend fun readSelectedRoute(contentResolver: ContentResolver, uri: Uri): Pair<String, ByteArray> =
-    withContext(Dispatchers.IO) {
+/** Reads a selected document once, without retaining an Android URI permission. */
+class AndroidRouteFileReader(private val contentResolver: ContentResolver) {
+    suspend fun read(uri: Uri): RouteImportSource = withContext(Dispatchers.IO) {
         val name = contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
             ?.use { cursor ->
                 if (cursor.moveToFirst()) cursor.getString(0) else null
@@ -28,5 +29,6 @@ suspend fun readSelectedRoute(contentResolver: ContentResolver, uri: Uri): Pair<
                 output.write(buffer, 0, bytesRead)
             }
         }
-        name to output.toByteArray()
+        RouteImportSource(name, output.toByteArray())
     }
+}

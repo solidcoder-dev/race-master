@@ -30,7 +30,7 @@ fun RouteIssues(
             ) {
                 Text(issue.displayMessage(route), fontWeight = FontWeight.Medium)
                 if (issue.pointIds.isNotEmpty()) {
-                    Text("$"+"{issue.pointIds.size} puntos afectados", style = MaterialTheme.typography.bodySmall)
+                    Text("${issue.pointIds.size} puntos afectados", style = MaterialTheme.typography.bodySmall)
                 }
             }
         }

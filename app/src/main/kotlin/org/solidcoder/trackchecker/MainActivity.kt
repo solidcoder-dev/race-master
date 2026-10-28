@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    RoutesApp(container.useCases)
+                    RoutesApp(container.useCases, container.fileReader::read)
                 }
             }
         }
