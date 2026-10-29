@@ -63,7 +63,7 @@ private fun RouteIssueCard(
     }
 }
 
-private fun RouteIssue.displayMessage(route: Route): String = when (code) {
+internal fun RouteIssue.displayMessage(route: Route): String = when (code) {
     RouteIssueCode.NO_POINTS -> "La ruta no contiene puntos"
     RouteIssueCode.MISSING_START -> "Identifica la salida"
     RouteIssueCode.MULTIPLE_START -> "Hay varias salidas"

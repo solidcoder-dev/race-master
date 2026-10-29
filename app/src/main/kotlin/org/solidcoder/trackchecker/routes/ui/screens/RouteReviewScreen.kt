@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.material3.*
@@ -12,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.solidcoder.trackchecker.routes.domain.model.*
 import org.solidcoder.trackchecker.routes.ui.RouteReviewUiState
@@ -20,6 +20,7 @@ import org.solidcoder.trackchecker.routes.ui.components.RouteIssues
 import org.solidcoder.trackchecker.routes.ui.components.RouteMap
 import org.solidcoder.trackchecker.routes.ui.components.PointTypeDot
 import org.solidcoder.trackchecker.routes.ui.components.displayName
+import org.solidcoder.trackchecker.routes.ui.components.displayMessage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,10 +54,9 @@ fun RouteReviewScreen(
     val selectedPoint = route.points.firstOrNull { it.id == editingPointId }
     val sheetScaffold = rememberBottomSheetScaffoldState()
     val density = LocalDensity.current
-    val maxPeekHeight = LocalConfiguration.current.screenHeightDp.dp * 0.72f
     var summaryHeightPx by remember(route.id) { mutableIntStateOf(0) }
-    val peekHeight = if (summaryHeightPx == 0) 310.dp else
-        minOf(maxPeekHeight, with(density) { summaryHeightPx.toDp() } + 48.dp)
+    val peekHeight = if (summaryHeightPx == 0) 180.dp else
+        with(density) { summaryHeightPx.toDp() } + 48.dp
 
     BottomSheetScaffold(
         modifier = modifier,
@@ -84,7 +84,15 @@ fun RouteReviewScreen(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
-                        RouteIssues(route = route, issues = loaded.issues, onSelectPoint = { editingPointId = it })
+                        loaded.issues.firstOrNull()?.let { issue ->
+                            Text(
+                                issue.displayMessage(route),
+                                color = if (issue.severity == IssueSeverity.ERROR)
+                                    MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                         Button(
                             onClick = onMarkReady,
                             enabled = route.status != RouteStatus.READY && loaded.issues.none { it.severity == IssueSeverity.ERROR },
@@ -93,10 +101,17 @@ fun RouteReviewScreen(
                             Text(if (route.status == RouteStatus.READY) "Ruta lista" else "Validar ruta")
                         }
                         Text(
-                            "Desliza hacia arriba para ver los puntos",
+                            "Desliza hacia arriba para ver incidencias y puntos",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+                }
+                if (loaded.issues.isNotEmpty()) {
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            RouteIssues(route = route, issues = loaded.issues, onSelectPoint = { editingPointId = it })
+                        }
                     }
                 }
                 items(route.points, key = { it.id.value }) { point ->
