@@ -11,7 +11,7 @@ class RouteValidatorTest {
     private fun point(id: String, name: String, type: RoutePointType) =
         RoutePoint(RoutePointId(id), name, Coordinates(28.0, -15.0), type)
 
-    @Test fun `duplicated point labels warn but do not prevent validation`() {
+    @Test fun `duplicated point labels block validation`() {
         val route = Route.imported(
             RouteId("r"), "Etapa", listOf(
                 point("start", "Salida", RoutePointType.START),
@@ -21,8 +21,9 @@ class RouteValidatorTest {
             ), 10
         )
         val result = RouteValidator().validate(route)
-        assertTrue(result.canBeReady)
+        assertFalse(result.canBeReady)
         assertEquals(RouteIssueCode.DUPLICATE_NAME, result.issues.single().code)
+        assertEquals(IssueSeverity.ERROR, result.issues.single().severity)
         assertEquals(listOf(RoutePointId("wp1"), RoutePointId("wp2")), result.issues.single().pointIds)
     }
 

@@ -34,7 +34,7 @@ class RouteValidator {
             .filterValues { it.size > 1 }
             .values.forEach { points ->
                 issues += RouteIssue(
-                    RouteIssueCode.DUPLICATE_NAME, IssueSeverity.WARNING, points.map { it.id }
+                    RouteIssueCode.DUPLICATE_NAME, IssueSeverity.ERROR, points.map { it.id }
                 )
             }
         return RouteValidation(issues)
