@@ -11,8 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -54,7 +52,6 @@ fun RouteReviewScreen(
     var editingSelected by remember(route.id) { mutableStateOf(false) }
     var settingsOpen by remember(route.id) { mutableStateOf(false) }
     var patternOpen by remember(route.id) { mutableStateOf(false) }
-    var menuOpen by remember(route.id) { mutableStateOf(false) }
     var showRadii by remember(route.id) { mutableStateOf(false) }
     val selectionActive = selectedIds.isNotEmpty()
     val selectedPoint = route.points.firstOrNull { it.id == editingPointId }
@@ -79,46 +76,15 @@ fun RouteReviewScreen(
         scaffoldState = sheetScaffold,
         sheetPeekHeight = peekHeight,
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(if (selectionActive) "${selectedIds.size} seleccionados" else route.name,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
-                },
-                navigationIcon = {
-                    TextButton(onClick = {
-                        if (selectionActive) selectedIds = emptySet() else onBack()
-                    }) { Text(if (selectionActive) "×" else "←") }
-                },
-                actions = {
-                    if (selectionActive) {
-                        IconButton(onClick = { editingSelected = true }, modifier = Modifier.semantics {
-                            contentDescription = "Editar puntos seleccionados"
-                        }) { Text("✎", style = MaterialTheme.typography.titleLarge) }
-                    } else {
-                        IconButton(onClick = { showRadii = !showRadii }, modifier = Modifier.semantics {
-                            contentDescription = if (showRadii) "Ocultar radios" else "Mostrar radios"
-                        }) {
-                            Text("◎", style = MaterialTheme.typography.titleLarge,
-                                color = if (showRadii) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Box {
-                            IconButton(onClick = { menuOpen = true }, modifier = Modifier.semantics {
-                                contentDescription = "Opciones de ruta"
-                            }) { Text("⋮", style = MaterialTheme.typography.titleLarge) }
-                            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                                DropdownMenuItem(text = { Text("Configuración de ruta") }, onClick = {
-                                    menuOpen = false
-                                    settingsOpen = true
-                                })
-                                DropdownMenuItem(text = { Text("Aplicar patrón de puntuación") }, onClick = {
-                                    menuOpen = false
-                                    patternOpen = true
-                                })
-                            }
-                        }
-                    }
-                }
+            RouteReviewHeader(
+                routeName = route.name,
+                selectionCount = selectedIds.size,
+                showDetectionRadii = showRadii,
+                onNavigate = { if (selectionActive) selectedIds = emptySet() else onBack() },
+                onEditSelected = { editingSelected = true },
+                onToggleRadii = { showRadii = !showRadii },
+                onOpenSettings = { settingsOpen = true },
+                onOpenPatterns = { patternOpen = true }
             )
         },
         sheetContent = {
