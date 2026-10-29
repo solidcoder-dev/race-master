@@ -18,11 +18,6 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_tracks_routeId` ON `tracks` (`routeId`)")
         db.execSQL("CREATE TABLE IF NOT EXISTS `track_samples` (`trackId` TEXT NOT NULL, `segmentIndex` INTEGER NOT NULL, `sampleIndex` INTEGER NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `timestampEpochMs` INTEGER, PRIMARY KEY(`trackId`, `segmentIndex`, `sampleIndex`), FOREIGN KEY(`trackId`) REFERENCES `tracks`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_track_samples_trackId` ON `track_samples` (`trackId`)")
-    }
-}
-
-val MIGRATION_3_4 = object : Migration(3, 4) {
-    override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("CREATE TABLE IF NOT EXISTS `track_evaluations` (`id` TEXT NOT NULL, `routeId` TEXT NOT NULL, `trackId` TEXT NOT NULL, `routeFingerprint` TEXT NOT NULL, `evaluatedAtEpochMs` INTEGER NOT NULL, `validStart` INTEGER NOT NULL, `validFinish` INTEGER NOT NULL, `scoreTotal` INTEGER, PRIMARY KEY(`id`), FOREIGN KEY(`routeId`) REFERENCES `routes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY(`trackId`) REFERENCES `tracks`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)")
         db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_track_evaluations_routeId_trackId` ON `track_evaluations` (`routeId`, `trackId`)")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_track_evaluations_trackId` ON `track_evaluations` (`trackId`)")

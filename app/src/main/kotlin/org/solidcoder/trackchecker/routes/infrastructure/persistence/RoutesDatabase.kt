@@ -12,7 +12,7 @@ import org.solidcoder.trackchecker.scoring.infrastructure.persistence.EvaluatedP
 @Database(
     entities = [RouteRecord::class, RoutePointRecord::class, TrackRecord::class, TrackSampleRecord::class,
         EvaluationRecord::class, EvaluatedPointRecord::class],
-    version = 4,
+    version = 3,
     exportSchema = true
 )
 abstract class RoutesDatabase : RoomDatabase() {

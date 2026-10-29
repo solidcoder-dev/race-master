@@ -47,7 +47,7 @@ class RoutesMigrationTest {
         }
     }
 
-    @Test fun migrationAddsTrackTablesWithoutChangingExistingRoutes() {
+    @Test fun migrationAddsTrackAndEvaluationTablesWithCascade() {
         val name = "route-track-migration-test"
         helper.createDatabase(name, 2).apply {
             execSQL("INSERT INTO routes (id, name, status, importedAtEpochMs, defaultDetectionRadiusMeters) VALUES ('route', 'Etapa', 'READY', 100, 50.0)")
@@ -61,6 +61,18 @@ class RoutesMigrationTest {
             }
             database.execSQL("INSERT INTO tracks (id, routeId, name, importedAtEpochMs) VALUES ('track', 'route', 'GPS', 101)")
             database.execSQL("INSERT INTO track_samples (trackId, segmentIndex, sampleIndex, latitude, longitude) VALUES ('track', 0, 0, 28.0, -15.0)")
+            database.execSQL("INSERT INTO track_evaluations (id, routeId, trackId, routeFingerprint, evaluatedAtEpochMs, validStart, validFinish) VALUES ('evaluation', 'route', 'track', 'fingerprint', 102, 1, 1)")
+            database.execSQL("INSERT INTO evaluated_points (evaluationId, pointId, status, minimumDistanceMeters, detectionRadiusMeters) VALUES ('evaluation', 'wp', 'PASSED', 0.0, 50.0)")
+            database.execSQL("PRAGMA foreign_keys=ON")
+            database.execSQL("DELETE FROM routes WHERE id = 'route'")
+            database.query("SELECT COUNT(*) FROM tracks").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals(0, cursor.getInt(0))
+            }
+            database.query("SELECT COUNT(*) FROM track_evaluations").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals(0, cursor.getInt(0))
+            }
         }
     }
 }
