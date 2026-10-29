@@ -18,7 +18,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    RoutesApp(container.useCases, container.fileReader::read)
+                    RoutesApp(
+                        actions = container.useCases,
+                        trackChecks = container.trackChecks,
+                        readSelectedRoute = container.fileReader::read,
+                        readSelectedTrack = container.fileReader::readTrack
+                    )
                 }
             }
         }

@@ -17,11 +17,15 @@ import org.solidcoder.trackchecker.routes.application.ports.RouteImportSource
 import org.solidcoder.trackchecker.routes.application.usecases.EditRoutePointDetails
 import org.solidcoder.trackchecker.routes.application.usecases.EditRoutePoints
 import org.solidcoder.trackchecker.routes.application.usecases.ApplyRouteScoringPattern
+import org.solidcoder.trackchecker.scoring.application.usecases.TrackCheckActions
+import org.solidcoder.trackchecker.tracks.application.ports.TrackImportSource
+import org.solidcoder.trackchecker.tracks.domain.model.TrackId
 import org.xml.sax.SAXException
 import org.xmlpull.v1.XmlPullParserException
 
 class RoutesViewModel(
-    private val actions: RouteUseCases
+    private val actions: RouteUseCases,
+    private val trackChecks: TrackCheckActions
 ) : ViewModel() {
     private val mutableRoutes = MutableStateFlow(RoutesUiState())
     val routes: StateFlow<RoutesUiState> = mutableRoutes
@@ -93,6 +97,43 @@ class RoutesViewModel(
         actions.markReady(id)
     }
 
+    fun selectTrack(id: TrackId?) {
+        mutableReview.update { current ->
+            if (current is RouteReviewUiState.Loaded && (id == null || current.tracks.any { it.track.id == id }))
+                current.copy(selectedTrackId = id) else current
+        }
+    }
+
+    fun importTrack(routeId: RouteId, source: TrackImportSource) {
+        mutableReview.update { state ->
+            if (state is RouteReviewUiState.Loaded) state.copy(importingTrack = true) else state
+        }
+        viewModelScope.launch {
+            try {
+                val imported = trackChecks.importAndEvaluate(routeId, source)
+                load(routeId)
+                selectTrack(imported.track.id)
+                mutableEvents.send(RoutesUiEvent.Message("Track evaluado correctamente."))
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                report(error)
+            } finally {
+                mutableReview.update { state ->
+                    if (state is RouteReviewUiState.Loaded) state.copy(importingTrack = false) else state
+                }
+            }
+        }
+    }
+
+    fun recalculateTrack(routeId: RouteId, trackId: TrackId) = change(routeId) {
+        trackChecks.recalculate(routeId, trackId)
+    }
+
+    fun deleteTrack(routeId: RouteId, trackId: TrackId) = change(routeId) {
+        trackChecks.delete(routeId, trackId)
+    }
+
     fun delete(id: RouteId, onDeleted: () -> Unit) {
         viewModelScope.launch {
             try {
@@ -136,10 +177,13 @@ class RoutesViewModel(
 
     private suspend fun load(id: RouteId) {
         val route = actions.get(id)
+        val previous = mutableReview.value as? RouteReviewUiState.Loaded
         mutableReview.value = if (route == null) {
             RouteReviewUiState.NotFound
         } else {
-            RouteReviewUiState.Loaded(route, actions.validate(id).issues)
+            val tracks = trackChecks.list(id)
+            val selected = previous?.selectedTrackId?.takeIf { selectedId -> tracks.any { it.track.id == selectedId } }
+            RouteReviewUiState.Loaded(route, actions.validate(id).issues, tracks, selected)
         }
     }
 
@@ -152,11 +196,11 @@ class RoutesViewModel(
     }
 
     companion object {
-        fun factory(actions: RouteUseCases): ViewModelProvider.Factory =
+        fun factory(actions: RouteUseCases, trackChecks: TrackCheckActions): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    RoutesViewModel(actions) as T
+                    RoutesViewModel(actions, trackChecks) as T
             }
     }
 }
