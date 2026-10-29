@@ -37,6 +37,8 @@ import org.solidcoder.trackchecker.routes.domain.model.RouteId
 import org.solidcoder.trackchecker.routes.domain.model.RoutePoint
 import org.solidcoder.trackchecker.routes.domain.model.RoutePointId
 import org.solidcoder.trackchecker.routes.domain.model.DetectionRadius
+import org.solidcoder.trackchecker.scoring.domain.model.PassageStatus
+import org.solidcoder.trackchecker.tracks.domain.model.Track
 import kotlin.math.hypot
 
 /**
@@ -55,6 +57,8 @@ fun RouteMap(
     showDetectionRadii: Boolean,
     selectedPointId: RoutePointId?,
     selectedPointIds: Set<RoutePointId>,
+    track: Track? = null,
+    passageStatuses: Map<RoutePointId, PassageStatus> = emptyMap(),
     onPointClick: (RoutePointId) -> Unit,
     onPointLongPress: (RoutePointId) -> Unit,
     modifier: Modifier = Modifier
@@ -167,9 +171,9 @@ fun RouteMap(
         }
     }
 
-    LaunchedEffect(controller, styleVersion, points) {
+    LaunchedEffect(controller, styleVersion, points, passageStatuses) {
         controller?.let { map ->
-            markers.show(map, points, selectedPointIds + listOfNotNull(selectedPointId)) { currentCallback(it) }
+            markers.show(map, points, selectedPointIds + listOfNotNull(selectedPointId), passageStatuses) { currentCallback(it) }
         }
     }
 
@@ -187,6 +191,10 @@ fun RouteMap(
 
     LaunchedEffect(controller, styleVersion, points, defaultRadius, showDetectionRadii) {
         controller?.let { RouteMapDetectionAreas.render(it, points, defaultRadius, showDetectionRadii) }
+    }
+
+    LaunchedEffect(controller, styleVersion, track) {
+        controller?.let { RouteMapTrackLayer.render(it, track) }
     }
 
     Box(modifier) {
