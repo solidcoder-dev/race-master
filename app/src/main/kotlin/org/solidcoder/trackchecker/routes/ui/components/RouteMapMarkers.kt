@@ -35,7 +35,8 @@ internal class RouteMapMarkers(context: Context) {
     private var selectedPointIds: Set<RoutePointId> = emptySet()
 
     fun show(map: MapLibreMap, points: List<RoutePoint>, selection: Set<RoutePointId>, onPointClick: (RoutePointId) -> Unit) {
-        map.clear()
+        // MapLibre's clear() also removes non-marker overlays owned by other components.
+        markers.values.forEach { map.removeMarker(it) }
         selectedPointIds = selection
         markerTypes = points.associate { it.id to it.type }
         markers = points.associate { point ->
