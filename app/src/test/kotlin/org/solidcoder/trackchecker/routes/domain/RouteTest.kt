@@ -61,6 +61,24 @@ class RouteTest {
         assertThrows(IllegalArgumentException::class.java) { waypoint.withScoreValueOverride(-1) }
     }
 
+    @Test fun `applying a new pattern keeps individual scores unless explicitly replaced`() {
+        val initial = route().overridePointScore(waypoint.id, 25)
+            .applyScoringPattern(ScoringPattern.PASSED_POINTS)
+        val changed = initial.applyScoringPattern(ScoringPattern.MIXED)
+        assertEquals(PointScoreEffect(whenPassed = 25), changed.scoringFor(waypoint.id))
+        assertEquals(PointScoreEffect(whenPassed = 10), changed.scoringFor(duplicate.id))
+        val reset = changed.applyScoringPattern(ScoringPattern.MIXED, replaceOverrides = true)
+        assertEquals(PointScoreEffect(whenPassed = 10), reset.scoringFor(waypoint.id))
+        assertNull(reset.points.first { it.id == waypoint.id }.scoreValueOverride)
+    }
+
+    @Test fun `applying a scoring pattern never resets custom detection radii`() {
+        val custom = route().overridePointDetectionRadius(waypoint.id, DetectionRadius(100.0))
+        assertEquals(100.0,
+            custom.applyScoringPattern(ScoringPattern.MIXED, replaceOverrides = true)
+                .detectionRadiusFor(waypoint.id).meters, 0.0)
+    }
+
     @Test fun `renaming a point preserves its identity and the original route`() {
         val original = route()
         val renamed = original.renamePoint(waypoint.id, "Barranco")
