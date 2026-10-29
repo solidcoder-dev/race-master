@@ -2,6 +2,13 @@ package org.solidcoder.trackchecker.routes.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -25,24 +32,34 @@ import org.maplibre.android.maps.MapView
 import org.solidcoder.trackchecker.routes.domain.model.Route
 import org.solidcoder.trackchecker.routes.domain.model.RoutePointId
 import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
+import org.solidcoder.trackchecker.BuildConfig
 
 /**
  * A native MapLibre map hosted inside Compose. Marker snippets carry stable IDs,
  * because route point names are explicitly allowed to repeat.
  *
- * The MapLibre demo style is for development only. Configure a tile provider
- * before distributing the app for real-world rally use.
+ * MapTiler provides satellite and shaded outdoor styles when configured.
+ * The MapLibre demo style remains an explicit development fallback.
  */
 @Suppress("DEPRECATION")
 @Composable
-fun RouteMap(route: Route, onPointClick: (RoutePointId) -> Unit, modifier: Modifier = Modifier) {
+fun RouteMap(
+    route: Route,
+    selectedPointId: RoutePointId?,
+    onPointClick: (RoutePointId) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val currentCallback by rememberUpdatedState(onPointClick)
+    val providerKey = BuildConfig.MAPTILER_API_KEY
+    var baseMap by remember(route.id) { mutableStateOf(RouteMapStyle.SATELLITE) }
     MapLibre.getInstance(context)
 
     val mapView = remember(route.id) { MapView(context).apply { onCreate(null) } }
     var controller by remember(route.id) { mutableStateOf<MapLibreMap?>(null) }
+    var styleVersion by remember(route.id) { mutableIntStateOf(0) }
+    var initialCameraSet by remember(route.id) { mutableStateOf(false) }
 
     DisposableEffect(mapView, lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
@@ -58,9 +75,22 @@ fun RouteMap(route: Route, onPointClick: (RoutePointId) -> Unit, modifier: Modif
         if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) mapView.onStart()
         if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) mapView.onResume()
         mapView.getMapAsync { map ->
-            map.setStyle("https://demotiles.maplibre.org/style.json") {
+            controller = map
+        }
+        onDispose {
+            lifecycle.removeObserver(observer)
+            controller = null
+            mapView.onPause()
+            mapView.onStop()
+            mapView.onDestroy()
+        }
+    }
+
+    LaunchedEffect(controller, baseMap) {
+        controller?.let { map ->
+            map.setStyle(RouteMapStyles.url(baseMap, providerKey)) {
                 val points = route.points
-                if (points.isNotEmpty()) {
+                if (!initialCameraSet && points.isNotEmpty()) {
                     val bounds = LatLngBounds.Builder()
                     points.forEach { point ->
                         bounds.include(LatLng(point.coordinates.latitude, point.coordinates.longitude))
@@ -75,32 +105,29 @@ fun RouteMap(route: Route, onPointClick: (RoutePointId) -> Unit, modifier: Modif
                                 .zoom(9.0)
                                 .build()
                         }
+                        initialCameraSet = true
                     }
                 }
-                controller = map
+                styleVersion++
             }
-        }
-        onDispose {
-            lifecycle.removeObserver(observer)
-            controller = null
-            mapView.onPause()
-            mapView.onStop()
-            mapView.onDestroy()
         }
     }
 
-    LaunchedEffect(controller, route.points) {
+    LaunchedEffect(controller, styleVersion, route.points, selectedPointId) {
         controller?.let { map ->
             map.clear()
             val icons = RoutePointType.entries.associateWith { type ->
                 IconFactory.getInstance(context).fromBitmap(pointMarkerBitmap(type, context.resources.displayMetrics.density))
+            }
+            val selectedIcons = RoutePointType.entries.associateWith { type ->
+                IconFactory.getInstance(context).fromBitmap(pointMarkerBitmap(type, context.resources.displayMetrics.density, selected = true))
             }
             route.points.forEach { point ->
                 map.addMarker(
                     MarkerOptions()
                         .position(LatLng(point.coordinates.latitude, point.coordinates.longitude))
                         .title(point.name)
-                        .icon(icons.getValue(point.type))
+                        .icon(if (point.id == selectedPointId) selectedIcons.getValue(point.type) else icons.getValue(point.type))
                         .snippet(point.id.value)
                 )
             }
@@ -112,16 +139,40 @@ fun RouteMap(route: Route, onPointClick: (RoutePointId) -> Unit, modifier: Modif
         }
     }
 
-    AndroidView(factory = { mapView }, modifier = modifier)
+    LaunchedEffect(controller, selectedPointId) {
+        val point = route.points.firstOrNull { it.id == selectedPointId }
+        if (point != null) {
+            controller?.animateCamera(CameraUpdateFactory.newLatLng(
+                LatLng(point.coordinates.latitude, point.coordinates.longitude)
+            ))
+        }
+    }
+
+    Box(modifier) {
+        AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
+        if (providerKey.isNotBlank()) {
+            Surface(Modifier.align(Alignment.TopEnd).padding(12.dp), shape = androidx.compose.material3.MaterialTheme.shapes.large) {
+                Row(Modifier.padding(horizontal = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    RouteMapStyle.entries.forEach { style ->
+                        FilterChip(
+                            selected = baseMap == style,
+                            onClick = { baseMap = style },
+                            label = { androidx.compose.material3.Text(style.label) }
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
-private fun pointMarkerBitmap(type: RoutePointType, density: Float): Bitmap {
+private fun pointMarkerBitmap(type: RoutePointType, density: Float, selected: Boolean = false): Bitmap {
     val size = (30 * density).toInt().coerceAtLeast(30)
     val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     val center = size / 2f
-    paint.color = android.graphics.Color.WHITE
+    paint.color = if (selected) 0xFFFFD54F.toInt() else android.graphics.Color.WHITE
     canvas.drawCircle(center, center, size * 0.47f, paint)
     paint.color = PointVisuals.color(type)
     canvas.drawCircle(center, center, size * 0.39f, paint)

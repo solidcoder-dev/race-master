@@ -122,6 +122,7 @@ fun RouteReviewScreen(
     ) { contentPadding ->
         RouteMap(
             route = route,
+            selectedPointId = editingPointId,
             modifier = Modifier.fillMaxSize().padding(contentPadding),
             onPointClick = { editingPointId = it }
         )

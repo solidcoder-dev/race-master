@@ -5,6 +5,10 @@ plugins {
     id("org.jetbrains.kotlin.kapt")
 }
 
+val mapTilerKey = providers.gradleProperty("MAPTILER_API_KEY")
+    .orElse(providers.environmentVariable("MAPTILER_API_KEY"))
+    .orElse("")
+
 android {
     namespace = "org.solidcoder.trackchecker"
     compileSdk = 36
@@ -15,6 +19,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+        buildConfigField("String", "MAPTILER_API_KEY", "\"${mapTilerKey.get().replace("\\", "\\\\").replace("\"", "\\\"")}\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -25,7 +30,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
 }
 
 kapt {
