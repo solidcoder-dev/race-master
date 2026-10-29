@@ -8,6 +8,7 @@ class RouteTest {
     private val start = RoutePoint(RoutePointId("start"), "Salida", Coordinates(28.0, -15.0), RoutePointType.START)
     private val waypoint = RoutePoint(RoutePointId("wp"), "WP04", Coordinates(28.1, -15.1), RoutePointType.WAYPOINT)
     private val duplicate = RoutePoint(RoutePointId("wp2"), "WP04", Coordinates(28.2, -15.2), RoutePointType.WAYPOINT)
+    private val checkpoint = RoutePoint(RoutePointId("cp"), "CP1", Coordinates(28.25, -15.25), RoutePointType.CHECKPOINT)
     private val finish = RoutePoint(RoutePointId("finish"), "Meta", Coordinates(28.3, -15.3), RoutePointType.FINISH)
 
     private fun route() = Route.imported(RouteId("r1"), "Etapa 1", listOf(start, waypoint, duplicate, finish), 100L)
@@ -27,7 +28,7 @@ class RouteTest {
     }
 
     @Test fun `editing a ready route requires revalidation`() {
-        val ready = route().markReady()
+        val ready = Route.imported(RouteId("ready"), "Etapa", listOf(start, waypoint, checkpoint, finish), 100L).markReady()
         assertEquals(RouteStatus.READY, ready.status)
         assertEquals(RouteStatus.DRAFT, ready.changePointType(waypoint.id, RoutePointType.CHECKPOINT).status)
     }

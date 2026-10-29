@@ -17,6 +17,7 @@ class RouteValidatorTest {
                 point("start", "Salida", RoutePointType.START),
                 point("wp1", "WP04", RoutePointType.WAYPOINT),
                 point("wp2", "WP04", RoutePointType.WAYPOINT),
+                point("cp1", "CP01", RoutePointType.CHECKPOINT),
                 point("end", "Meta", RoutePointType.FINISH)
             ), 10
         )
@@ -35,13 +36,39 @@ class RouteValidatorTest {
         assertTrue(result.issues.any { it.code == RouteIssueCode.MISSING_FINISH })
     }
 
-    @Test fun `one start and one finish without duplicated names is ready`() {
+    @Test fun `a route with required types and unique names is ready`() {
         val route = Route.imported(
             RouteId("r"), "Etapa", listOf(
                 point("start", "Salida", RoutePointType.START),
+                point("waypoint", "WP01", RoutePointType.WAYPOINT),
+                point("checkpoint", "CP01", RoutePointType.CHECKPOINT),
                 point("end", "Meta", RoutePointType.FINISH)
             ), 10
         )
         assertTrue(RouteValidator().validate(route).issues.isEmpty())
+    }
+
+    @Test fun `missing waypoint or checkpoint blocks route readiness`() {
+        val route = Route.imported(RouteId("r"), "Etapa", listOf(
+            point("start", "Salida", RoutePointType.START),
+            point("end", "Meta", RoutePointType.FINISH)
+        ), 10)
+        val validation = RouteValidator().validate(route)
+        assertFalse(validation.canBeReady)
+        assertTrue(validation.issues.any { it.code == RouteIssueCode.MISSING_WAYPOINT })
+        assertTrue(validation.issues.any { it.code == RouteIssueCode.MISSING_CHECKPOINT })
+    }
+
+    @Test fun `unclassified points must be reviewed before readiness`() {
+        val route = Route.imported(RouteId("r"), "Etapa", listOf(
+            point("start", "Salida", RoutePointType.START),
+            point("waypoint", "WP01", RoutePointType.WAYPOINT),
+            point("checkpoint", "CP01", RoutePointType.CHECKPOINT),
+            point("other", "Mystery", RoutePointType.OTHER),
+            point("end", "Meta", RoutePointType.FINISH)
+        ), 10)
+        val validation = RouteValidator().validate(route)
+        assertFalse(validation.canBeReady)
+        assertEquals(listOf(RoutePointId("other")), validation.issues.single { it.code == RouteIssueCode.UNKNOWN_POINT_TYPE }.pointIds)
     }
 }

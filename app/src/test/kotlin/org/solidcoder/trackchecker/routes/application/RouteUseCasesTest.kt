@@ -35,6 +35,7 @@ class RouteUseCasesTest {
             ImportedPoint("SALIDA", Coordinates(28.0, -15.0), RoutePointType.START),
             ImportedPoint("WP04", Coordinates(28.1, -15.1), RoutePointType.WAYPOINT),
             ImportedPoint("WP04", Coordinates(28.2, -15.2), RoutePointType.WAYPOINT),
+            ImportedPoint("CP1", Coordinates(28.25, -15.25), RoutePointType.CHECKPOINT),
             ImportedPoint("META", Coordinates(28.3, -15.3), RoutePointType.FINISH)
         )
     }
@@ -68,19 +69,20 @@ class RouteUseCasesTest {
         val actions = routeUseCases(db, db, reader)
         val route = actions.import(source())
         val validation = actions.validate(route.id)
-        assertTrue(validation.canBeReady)
+        assertFalse(validation.canBeReady)
         assertEquals(RouteStatus.DRAFT, actions.get(route.id)?.status)
         assertEquals(RouteIssueCode.DUPLICATE_NAME, validation.issues.single().code)
     }
 
-    @Test fun `marking a valid route ready preserves duplicate-name warnings`() = runBlocking {
+    @Test fun `marking a resolved route ready succeeds`() = runBlocking {
         val db = MemoryRoutes()
         val actions = routeUseCases(db, db, reader)
         val route = actions.import(source())
+        actions.editPoint(EditRoutePointDetails(route.id, route.points[2].id, "WP05", RoutePointType.WAYPOINT))
         val validation = actions.markReady(route.id)
         assertTrue(validation.canBeReady)
         assertEquals(RouteStatus.READY, actions.get(route.id)?.status)
-        assertEquals(RouteIssueCode.DUPLICATE_NAME, validation.issues.single().code)
+        assertTrue(validation.issues.isEmpty())
     }
 
     @Test fun `an invalid route stays draft when confirmation is attempted`() = runBlocking {

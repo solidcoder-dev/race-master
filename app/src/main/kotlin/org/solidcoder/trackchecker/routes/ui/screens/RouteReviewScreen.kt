@@ -81,7 +81,7 @@ fun RouteReviewScreen(
                 }
                 Button(
                     onClick = onMarkReady,
-                    enabled = route.status != RouteStatus.READY,
+                    enabled = route.status != RouteStatus.READY && loaded.issues.none { it.severity == IssueSeverity.ERROR },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(if (route.status == RouteStatus.READY) "Ruta lista" else "Validar ruta")

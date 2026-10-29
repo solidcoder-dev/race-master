@@ -43,6 +43,9 @@ private fun RouteIssue.displayMessage(route: Route): String = when (code) {
     RouteIssueCode.MULTIPLE_START -> "Hay varias salidas"
     RouteIssueCode.MISSING_FINISH -> "Identifica la meta"
     RouteIssueCode.MULTIPLE_FINISH -> "Hay varias metas"
+    RouteIssueCode.MISSING_WAYPOINT -> "Identifica al menos un waypoint"
+    RouteIssueCode.MISSING_CHECKPOINT -> "Identifica al menos un checkpoint"
+    RouteIssueCode.UNKNOWN_POINT_TYPE -> "Clasifica los puntos sin tipo"
     RouteIssueCode.DUPLICATE_NAME -> {
         val name = pointIds.firstOrNull()?.let { id -> route.points.firstOrNull { it.id == id }?.name }
         if (name == null) "Hay puntos con nombre repetido" else "Nombre repetido: $name"
