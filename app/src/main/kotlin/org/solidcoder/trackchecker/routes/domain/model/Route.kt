@@ -83,11 +83,6 @@ class Route private constructor(
         val updated = points.map { point ->
             if (point.id in pointIds) changes.applyTo(point) else point
         }
-        if (changes.type == RoutePointType.START || changes.type == RoutePointType.FINISH) {
-            require(updated.count { it.type == changes.type } == 1) {
-                "Only one start or finish is allowed"
-            }
-        }
         return Route(id, name, updated, RouteStatus.DRAFT, importedAtEpochMs, defaultDetectionRadius, scoringPattern)
     }
 
