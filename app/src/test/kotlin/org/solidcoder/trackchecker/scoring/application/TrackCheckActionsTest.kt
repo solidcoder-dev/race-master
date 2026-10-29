@@ -88,7 +88,7 @@ class TrackCheckActionsTest {
         }
         val evaluations = object : EvaluationRepository {
             override suspend fun save(evaluation: TrackEvaluation) {
-                currentCoroutineContext().cancel("Persistence cancelled")
+                currentCoroutineContext().cancel(CancellationException("Persistence cancelled"))
                 throw CancellationException("Persistence cancelled")
             }
             override suspend fun find(routeId: RouteId, trackId: TrackId): TrackEvaluation? = null
