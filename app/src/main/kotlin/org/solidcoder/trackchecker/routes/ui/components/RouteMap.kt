@@ -2,12 +2,16 @@ package org.solidcoder.trackchecker.routes.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.FilterChip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -16,6 +20,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -23,17 +29,20 @@ import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
+import kotlin.math.floor
+import kotlin.math.pow
+import java.net.URL
+import java.net.HttpURLConnection
 import org.solidcoder.trackchecker.routes.domain.model.RouteId
 import org.solidcoder.trackchecker.routes.domain.model.RoutePoint
 import org.solidcoder.trackchecker.routes.domain.model.RoutePointId
-import org.solidcoder.trackchecker.BuildConfig
 
 /**
  * A native MapLibre map hosted inside Compose. Marker snippets carry stable IDs,
  * because route point names are explicitly allowed to repeat.
  *
- * MapTiler provides satellite and shaded outdoor styles when configured.
- * The MapLibre demo style remains an explicit development fallback.
+ * Uses OpenFreeMap vector labels and Mapterhorn elevation tiles. The public
+ * OpenTopoMap raster style is retained as a network-error fallback.
  */
 @Suppress("DEPRECATION")
 @Composable
@@ -47,8 +56,6 @@ fun RouteMap(
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val currentCallback by rememberUpdatedState(onPointClick)
-    val providerKey = BuildConfig.MAPTILER_API_KEY
-    var baseMap by remember(routeId) { mutableStateOf(RouteMapStyle.SATELLITE) }
     MapLibre.getInstance(context)
 
     val mapView = remember(routeId) { MapView(context).apply { onCreate(null) } }
@@ -56,6 +63,8 @@ fun RouteMap(
     var controller by remember(routeId) { mutableStateOf<MapLibreMap?>(null) }
     var styleVersion by remember(routeId) { mutableIntStateOf(0) }
     var initialCameraSet by remember(routeId) { mutableStateOf(false) }
+    var scale by remember(routeId) { mutableStateOf(MapScale("1 km", 80f)) }
+    var attribution by remember(routeId) { mutableStateOf(RouteMapStyles.FALLBACK_ATTRIBUTION) }
 
     DisposableEffect(mapView, lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
@@ -82,9 +91,27 @@ fun RouteMap(
         }
     }
 
-    LaunchedEffect(controller, baseMap) {
+    LaunchedEffect(controller) {
         controller?.let { map ->
-            map.setStyle(RouteMapStyles.url(baseMap, providerKey)) {
+            val localizedStyle = withContext(Dispatchers.IO) {
+                runCatching {
+                    val connection = URL(RouteMapStyles.STYLE_URL).openConnection() as HttpURLConnection
+                    connection.connectTimeout = 10_000
+                    connection.readTimeout = 15_000
+                    connection.setRequestProperty("User-Agent", "TrackChecker Android")
+                    try {
+                        connection.inputStream.bufferedReader().use { it.readText() }
+                    } finally {
+                        connection.disconnect()
+                    }
+                }.getOrNull()
+            }
+            val vectorStyle = localizedStyle?.let { json ->
+                runCatching { RouteMapStyles.localizedTerrainStyle(json) }.getOrNull()
+            }
+            attribution = if (vectorStyle != null) RouteMapStyles.ATTRIBUTION else RouteMapStyles.FALLBACK_ATTRIBUTION
+            val styleBuilder = vectorStyle ?: RouteMapStyles.fallbackStyle()
+            map.setStyle(styleBuilder) {
                 if (!initialCameraSet && points.isNotEmpty()) {
                     val bounds = LatLngBounds.Builder()
                     points.forEach { point ->
@@ -102,6 +129,10 @@ fun RouteMap(
                         }
                         initialCameraSet = true
                     }
+                }
+                updateScale(map, context.resources.displayMetrics.density) { scale = it }
+                map.addOnCameraIdleListener {
+                    updateScale(map, context.resources.displayMetrics.density) { scale = it }
                 }
                 styleVersion++
             }
@@ -130,18 +161,49 @@ fun RouteMap(
 
     Box(modifier) {
         AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
-        if (providerKey.isNotBlank()) {
-            Surface(Modifier.align(Alignment.TopEnd).padding(12.dp), shape = androidx.compose.material3.MaterialTheme.shapes.large) {
-                Row(Modifier.padding(horizontal = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    RouteMapStyle.entries.forEach { style ->
-                        FilterChip(
-                            selected = baseMap == style,
-                            onClick = { baseMap = style },
-                            label = { androidx.compose.material3.Text(style.label) }
-                        )
-                    }
-                }
+        Surface(
+            Modifier.align(Alignment.BottomStart).padding(start = 12.dp, bottom = 12.dp),
+            shape = RoundedCornerShape(6.dp),
+            color = Color.White.copy(alpha = 0.9f)
+        ) {
+            Column(Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                Text(scale.label, color = Color(0xFF222222), style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
+                androidx.compose.foundation.layout.Box(
+                    Modifier.padding(top = 3.dp).width(scale.widthDp.dp).height(3.dp)
+                        .background(Color(0xFF222222), RoundedCornerShape(1.dp))
+                )
             }
+        }
+        Surface(
+            Modifier.align(Alignment.BottomEnd).padding(8.dp),
+            shape = RoundedCornerShape(4.dp),
+            color = Color.White.copy(alpha = 0.85f)
+        ) {
+            Text(
+                attribution,
+                Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                color = Color(0xFF222222),
+                style = androidx.compose.material3.MaterialTheme.typography.labelSmall
+            )
         }
     }
 }
+
+private data class MapScale(val label: String, val widthDp: Float)
+
+private fun updateScale(map: MapLibreMap, density: Float, update: (MapScale) -> Unit) {
+    val latitude = map.cameraPosition.target?.latitude ?: return
+    val metersPerPixel = map.projection.getMetersPerPixelAtLatitude(latitude)
+    if (!metersPerPixel.isFinite() || metersPerPixel <= 0.0) return
+    val maxMeters = metersPerPixel * 100.0 * density
+    val magnitude = 10.0.pow(floor(kotlin.math.log10(maxMeters)))
+    val niceDistance = listOf(5.0, 2.0, 1.0).first { it * magnitude <= maxMeters } * magnitude
+    update(MapScale(formatDistance(niceDistance), (niceDistance / metersPerPixel / density).toFloat()))
+}
+
+private fun formatDistance(meters: Double): String =
+    when {
+        meters >= 1000.0 -> "${(meters / 1000.0).toInt()} km"
+        meters < 10.0 -> "${"%.1f".format(java.util.Locale.ROOT, meters)} m"
+        else -> "${meters.toInt()} m"
+    }

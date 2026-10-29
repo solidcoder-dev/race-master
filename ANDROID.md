@@ -17,21 +17,14 @@ The package namespace and application ID are `org.solidcoder.trackchecker`.
 
 ## Map imagery
 
-The route review map uses MapLibre. To enable satellite imagery and shaded
-topographic relief, create a MapTiler API key and provide it as a Gradle property
-in your personal `~/.gradle/gradle.properties` (outside the repository):
-
-```properties
-MAPTILER_API_KEY=your-key-here
-```
-
-Alternatively, set the `MAPTILER_API_KEY` environment variable when building.
-Without a key, the development-only MapLibre demo style is used and the map
-style selector is hidden. Do not distribute the app with the demo style.
-
-MapTiler keys in a mobile APK are visible to users. Before release, use a
-dedicated, restricted mobile key, verify the map request User-Agent against
-MapTiler's allowed User-Agent policy, and check the provider's quota and terms.
+The route review map uses MapLibre with the OpenFreeMap Liberty vector style,
+localized label fallback (`name:es`, then English, then the available local
+name), and Mapterhorn Terrarium elevation tiles for hillshade. If the vector
+style cannot be loaded, the app falls back to OpenTopoMap raster tiles. Visible
+attribution is required for each source. All these endpoints are public hosted
+services without an availability guarantee; for production reliability, host
+the vector and elevation tiles on infrastructure with an operational owner or
+use a provider with explicit service terms. The scale bar is calculated locally.
 
 The Android manifest currently disables automatic backup deliberately.
 Before production usage, establish a backup/export strategy for user-managed routes.
