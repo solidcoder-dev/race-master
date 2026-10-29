@@ -85,8 +85,8 @@ class RouteUseCasesTest {
         val route = actions.import(source())
         assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                actions.editPoints(EditRoutePoints(route.id, setOf(route.points[1].id, route.points[2].id),
-                    PointChanges(type = RoutePointType.START)))
+                actions.editPoints(EditRoutePoints(route.id, setOf(route.points[1].id, RoutePointId("unknown")),
+                    PointChanges(score = OverrideUpdate.Set(25))))
             }
         }
         assertEquals(route.points, actions.get(route.id)?.points)
