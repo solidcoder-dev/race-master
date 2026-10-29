@@ -54,6 +54,33 @@ class XmlRouteSourceParserTest {
         assertEquals(RoutePointType.ECLIPSE_WAYPOINT, points[1].type)
     }
 
+    @Test fun `KML structured type takes priority over a misleading name`() {
+        val kml = """<kml><Placemark><name>WP01</name><ExtendedData>
+            <Data name="pointType"><value>checkpoint</value></Data>
+            </ExtendedData><Point><coordinates>-15,28</coordinates></Point></Placemark></kml>"""
+        val point = parser.read(RouteImportSource("route.kml", kml.toByteArray())).single()
+        assertEquals(RoutePointType.CHECKPOINT, point.type)
+        assertEquals("WP01", point.name)
+    }
+
+    @Test fun `KML schema data and description classify unnamed-type points`() {
+        val kml = """<kml><Document>
+            <Placemark><name>Point A</name><ExtendedData><SchemaData>
+              <SimpleData name="type">start</SimpleData>
+            </SchemaData></ExtendedData><Point><coordinates>-15,28</coordinates></Point></Placemark>
+            <Placemark><name>Point B</name><description>Checkpoint</description>
+              <Point><coordinates>-15.1,28.1</coordinates></Point></Placemark>
+            </Document></kml>"""
+        val points = parser.read(RouteImportSource("route.kml", kml.toByteArray()))
+        assertEquals(listOf(RoutePointType.START, RoutePointType.CHECKPOINT), points.map { it.type })
+    }
+
+    @Test fun `GPX type takes priority over waypoint name`() {
+        val gpx = """<gpx><wpt lat="28" lon="-15"><name>WP01</name><type>checkpoint</type></wpt></gpx>"""
+        assertEquals(RoutePointType.CHECKPOINT,
+            parser.read(RouteImportSource("route.gpx", gpx.toByteArray())).single().type)
+    }
+
     @Test fun `KMZ extracts its embedded KML`() {
         val zipped = ByteArrayOutputStream().also { output ->
             ZipOutputStream(output).use { zip ->
