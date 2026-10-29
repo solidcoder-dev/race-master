@@ -14,8 +14,12 @@ class RouteMapStylesTest {
         """.trimIndent()
         val result = JSONObject(RouteMapStyles.localizedTerrainStyle(baseStyle).json)
         val terrain = result.getJSONObject("sources").getJSONObject("trackchecker-terrain")
-        val labels = result.getJSONArray("layers").getJSONObject(1).getJSONObject("layout").getJSONArray("text-field")
+        val layers = result.getJSONArray("layers")
+        val labels = layers.getJSONObject(1).getJSONObject("layout").getJSONArray("text-field")
 
+        assertTrue(layers.length() == 2)
+        assertTrue(layers.getJSONObject(0).getString("type") == "hillshade")
+        assertTrue(layers.getJSONObject(1).getString("id") == "place_names")
         assertTrue(terrain.getString("url").contains("mapterhorn.com"))
         assertTrue(terrain.getString("encoding") == "terrarium")
         assertTrue(labels.toString().contains("name:es"))
