@@ -13,6 +13,9 @@ interface TrackDao {
     @Query("SELECT * FROM tracks WHERE id = :id LIMIT 1")
     suspend fun findById(id: String): TrackWithSamples?
 
+    @Query("SELECT * FROM tracks WHERE routeId = :routeId ORDER BY importedAtEpochMs DESC")
+    suspend fun listForRoute(routeId: String): List<TrackRecord>
+
     @Upsert
     suspend fun upsert(track: TrackRecord)
 

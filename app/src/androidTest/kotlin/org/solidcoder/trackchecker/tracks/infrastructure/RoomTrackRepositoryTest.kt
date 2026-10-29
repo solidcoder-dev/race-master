@@ -51,6 +51,7 @@ class RoomTrackRepositoryTest {
 
         repository.save(first)
         repository.save(second)
+        assertEquals(setOf(first.id, second.id), repository.listForRoute(RouteId("route")).map { it.id }.toSet())
         assertEquals(listOf(2, 1), repository.findById(first.id)!!.segments.map { it.samples.size })
         assertEquals(28.1, repository.findById(first.id)!!.segments.first().samples.last().latitude, 0.0)
         assertNotNull(repository.findById(second.id))

@@ -81,6 +81,9 @@ class EvaluateTrackUseCaseTest {
     private class MemoryTracks : TrackRepository {
         private val tracks = mutableMapOf<TrackId, Track>()
         override suspend fun findById(id: TrackId): Track? = tracks[id]
+        override suspend fun listForRoute(routeId: RouteId) = tracks.values
+            .filter { it.routeId == routeId }
+            .map { TrackSummary(it.id, it.routeId, it.name, it.importedAtEpochMs) }
         override suspend fun save(track: Track) { tracks[track.id] = track }
         override suspend fun delete(id: TrackId) { tracks.remove(id) }
     }
