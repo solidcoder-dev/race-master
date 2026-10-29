@@ -36,7 +36,8 @@ fun PointEditorSheet(
     var radiusText by remember(point.id, point.detectionRadiusOverride) {
         mutableStateOf((point.detectionRadiusOverride ?: defaultRadius).meters.formatMeters())
     }
-    val scoreValid = !customScore || (scoreText.toIntOrNull()?.let { it >= 0 } == true)
+    val scoreable = type == RoutePointType.WAYPOINT || type == RoutePointType.CHECKPOINT
+    val scoreValid = !scoreable || !customScore || (scoreText.toIntOrNull()?.let { it >= 0 } == true)
     val radiusValid = !customRadius || (radiusText.toDoubleOrNull()?.let { it.isFinite() && it > 0 } == true)
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -81,23 +82,28 @@ fun PointEditorSheet(
             }
             HorizontalDivider()
             Text("Puntuación", style = MaterialTheme.typography.titleSmall)
-            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                Checkbox(checked = customScore, onCheckedChange = { customScore = it })
-                Text("Personalizar valor del punto")
+            if (scoreable) {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Checkbox(checked = customScore, onCheckedChange = { customScore = it })
+                    Text("Personalizar valor del punto")
+                }
+                if (customScore) {
+                    OutlinedTextField(
+                        value = scoreText,
+                        onValueChange = { scoreText = it },
+                        label = { Text("Puntos") },
+                        isError = !scoreValid,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                Text("El patrón de la ruta decide cuándo sumar o restar este valor.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                Text("Los patrones actuales no puntúan este tipo de punto.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (customScore) {
-                OutlinedTextField(
-                    value = scoreText,
-                    onValueChange = { scoreText = it },
-                    label = { Text("Puntos") },
-                    isError = !scoreValid,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-            Text("El patrón de la ruta decide cuándo sumar o restar este valor.",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             HorizontalDivider()
             Text("Radio de detección", style = MaterialTheme.typography.titleSmall)
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
@@ -124,9 +130,10 @@ fun PointEditorSheet(
                 TextButton(onClick = onDismiss) { Text("Cancelar") }
                 Spacer(Modifier.width(8.dp))
                 Button(onClick = {
-                    val score = if (customScore) scoreText.toInt() else null
+                    val score = if (scoreable && customScore) scoreText.toInt() else null
                     val radius = if (customRadius) DetectionRadius(radiusText.toDouble()) else null
-                    val scoreUpdate = if (score != point.scoreValueOverride) OverrideUpdate.Set(score) else OverrideUpdate.Keep
+                    val scoreUpdate = if (scoreable && score != point.scoreValueOverride)
+                        OverrideUpdate.Set(score) else OverrideUpdate.Keep
                     val radiusUpdate = if (radius != point.detectionRadiusOverride) OverrideUpdate.Set(radius) else OverrideUpdate.Keep
                     val changes = if (scoreUpdate != OverrideUpdate.Keep || radiusUpdate != OverrideUpdate.Keep)
                         PointChanges(score = scoreUpdate, radius = radiusUpdate) else null

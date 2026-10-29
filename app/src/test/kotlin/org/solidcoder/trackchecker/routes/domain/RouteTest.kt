@@ -61,6 +61,11 @@ class RouteTest {
         assertThrows(IllegalArgumentException::class.java) { waypoint.withScoreValueOverride(-1) }
     }
 
+    @Test fun `unscored types never gain points from a custom value`() {
+        val wpe = waypoint.changeType(RoutePointType.ECLIPSE_WAYPOINT).withScoreValueOverride(40)
+        assertNull(ScoringPattern.MIXED.effectFor(wpe.type, wpe.scoreValueOverride))
+    }
+
     @Test fun `applying a new pattern keeps individual scores unless explicitly replaced`() {
         val initial = route().overridePointScore(waypoint.id, 25)
             .applyScoringPattern(ScoringPattern.PASSED_POINTS)
