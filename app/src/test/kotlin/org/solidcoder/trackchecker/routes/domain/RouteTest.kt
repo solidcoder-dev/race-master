@@ -38,6 +38,22 @@ class RouteTest {
         assertThrows(IllegalArgumentException::class.java) { invalid.markReady() }
     }
 
+    @Test fun `readiness assessment reports errors without creating a ready route`() {
+        val invalid = Route.imported(RouteId("invalid"), "Etapa", listOf(waypoint), 100L)
+        val assessment = invalid.assessReadiness()
+        assertFalse(assessment.validation.canBeReady)
+        assertNull(assessment.readyRoute)
+        assertEquals(RouteStatus.DRAFT, invalid.status)
+    }
+
+    @Test fun `readiness assessment returns a ready route and its report together`() {
+        val original = Route.imported(RouteId("valid"), "Etapa", listOf(start, waypoint, checkpoint, finish), 100L)
+        val assessment = original.assessReadiness()
+        assertTrue(assessment.validation.canBeReady)
+        assertEquals(RouteStatus.READY, assessment.readyRoute?.status)
+        assertEquals(RouteStatus.DRAFT, original.status)
+    }
+
     @Test fun `a route with multiple starts cannot become ready`() {
         val extraStart = start.copy(id = RoutePointId("extra"))
         val invalid = Route.imported(RouteId("invalid"), "Etapa", listOf(start, extraStart, finish), 100L)
