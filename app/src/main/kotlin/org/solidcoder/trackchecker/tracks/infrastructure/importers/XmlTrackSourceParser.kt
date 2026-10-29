@@ -2,8 +2,10 @@ package org.solidcoder.trackchecker.tracks.infrastructure.importers
 
 import android.util.Xml
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.time.Instant
 import java.util.Locale
+import java.util.zip.ZipInputStream
 import org.solidcoder.trackchecker.tracks.application.ports.TrackImportSource
 import org.solidcoder.trackchecker.tracks.application.ports.TrackSourceReader
 import org.solidcoder.trackchecker.tracks.domain.model.GpsSample
@@ -17,14 +19,22 @@ class XmlTrackSourceParser(
     override fun read(source: TrackImportSource): List<TrackSegment> {
         require(source.content.size <= MAX_BYTES) { "El track supera 20 MB" }
         val extension = source.fileName.substringAfterLast('.', "").lowercase(Locale.ROOT)
-        require(extension == "gpx") { "Formato de track no admitido: .$extension" }
+        val bytes = when (extension) {
+            "gpx", "kml" -> source.content
+            "kmz" -> unzipKml(source.content)
+            else -> error("Formato de track no admitido: .$extension")
+        }
         val parser = createParser().apply {
             setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
-            setInput(ByteArrayInputStream(source.content), null)
+            setInput(ByteArrayInputStream(bytes), null)
         }
         parser.nextTag()
-        require(parser.name.equals("gpx", true)) { "El archivo no contiene un GPX" }
-        return parseGpx(parser).also { require(it.isNotEmpty()) { "El archivo no contiene un recorrido GPS" } }
+        val result = when (parser.name.lowercase(Locale.ROOT)) {
+            "gpx" -> parseGpx(parser)
+            "kml" -> parseKml(parser)
+            else -> error("El archivo no contiene un KML o GPX")
+        }
+        return result.also { require(it.isNotEmpty()) { "El archivo no contiene un recorrido GPS" } }
     }
 
     private fun parseGpx(parser: XmlPullParser): List<TrackSegment> {
@@ -90,6 +100,81 @@ class XmlTrackSourceParser(
 
     private fun parseTimestamp(value: String): Long? =
         runCatching { Instant.parse(value.trim()).toEpochMilli() }.getOrNull()
+
+    private fun parseKml(parser: XmlPullParser): List<TrackSegment> {
+        val segments = mutableListOf<TrackSegment>()
+        var lineDepth = -1
+        var trackDepth = -1
+        var coordinates = mutableListOf<GpsSample>()
+        var timestamps = mutableListOf<Long?>()
+        while (parser.nextToken() != XmlPullParser.END_DOCUMENT) {
+            when (parser.eventType) {
+                XmlPullParser.DOCDECL -> error("El archivo XML contiene una declaración no permitida")
+                XmlPullParser.START_TAG -> when {
+                    parser.name == "LineString" -> lineDepth = parser.depth
+                    parser.name == "Track" -> {
+                        trackDepth = parser.depth
+                        coordinates = mutableListOf()
+                        timestamps = mutableListOf()
+                    }
+                    lineDepth > 0 && parser.depth == lineDepth + 1 && parser.name == "coordinates" -> {
+                        val points = parser.nextText().trim().split(Regex("\\s+"))
+                            .filter { it.isNotBlank() }
+                            .map(::parseKmlCoordinate)
+                        if (points.isNotEmpty()) segments.add(TrackSegment(points))
+                    }
+                    trackDepth > 0 && parser.depth == trackDepth + 1 && parser.name == "coord" -> {
+                        val values = parser.nextText().trim().split(Regex("\\s+"))
+                        require(values.size >= 2) { "Coordenada gx:Track incompleta" }
+                        coordinates.add(GpsSample(values[1].toDouble(), values[0].toDouble()))
+                    }
+                    trackDepth > 0 && parser.depth == trackDepth + 1 && parser.name == "when" -> {
+                        timestamps.add(parseTimestamp(parser.nextText()))
+                    }
+                }
+                XmlPullParser.END_TAG -> when {
+                    parser.name == "LineString" && parser.depth == lineDepth -> lineDepth = -1
+                    parser.name == "Track" && parser.depth == trackDepth -> {
+                        if (coordinates.isNotEmpty()) {
+                            val samples = coordinates.mapIndexed { index, point ->
+                                point.copy(timestampEpochMs = timestamps.getOrNull(index))
+                            }
+                            segments.add(TrackSegment(samples))
+                        }
+                        trackDepth = -1
+                    }
+                }
+            }
+        }
+        return segments
+    }
+
+    private fun parseKmlCoordinate(raw: String): GpsSample {
+        val parts = raw.split(',')
+        require(parts.size >= 2) { "Coordenada KML incompleta" }
+        return GpsSample(parts[1].toDouble(), parts[0].toDouble())
+    }
+
+    private fun unzipKml(content: ByteArray): ByteArray {
+        ZipInputStream(ByteArrayInputStream(content)).use { zip ->
+            while (true) {
+                val entry = zip.nextEntry ?: break
+                if (!entry.isDirectory && entry.name.endsWith(".kml", ignoreCase = true)) {
+                    val output = ByteArrayOutputStream()
+                    val buffer = ByteArray(8192)
+                    while (true) {
+                        val count = zip.read(buffer)
+                        if (count < 0) break
+                        require(output.size() + count <= MAX_BYTES) { "KML comprimido demasiado grande" }
+                        output.write(buffer, 0, count)
+                    }
+                    return output.toByteArray()
+                }
+                zip.closeEntry()
+            }
+            error("KMZ sin archivo KML")
+        }
+    }
 
     private companion object { const val MAX_BYTES = 20 * 1024 * 1024 }
 }

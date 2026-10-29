@@ -3,6 +3,9 @@ package org.solidcoder.trackchecker.tracks.infrastructure
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
+import java.io.ByteArrayOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import org.kxml2.io.KXmlParser
 import org.solidcoder.trackchecker.tracks.application.ports.TrackImportSource
 import org.solidcoder.trackchecker.tracks.infrastructure.importers.XmlTrackSourceParser
@@ -34,5 +37,35 @@ class XmlTrackSourceParserTest {
         assertThrows(IllegalArgumentException::class.java) {
             parser.read(TrackImportSource("points.gpx", "<gpx><wpt lat=\"28\" lon=\"-15\"/></gpx>".toByteArray()))
         }
+    }
+
+    @Test fun `KML reads LineString but not isolated placemark points`() {
+        val xml = """<kml><Document><Placemark><Point><coordinates>-15,28</coordinates></Point></Placemark>
+          <Placemark><LineString><coordinates>-15,28,0 -15.1,28.1,0 -15.2,28.2</coordinates></LineString></Placemark>
+          </Document></kml>"""
+        val segments = parser.read(TrackImportSource("track.kml", xml.toByteArray()))
+        assertEquals(3, segments.single().samples.size)
+        assertEquals(-15.2, segments.single().samples.last().longitude, 0.0)
+    }
+
+    @Test fun `KML gx Track preserves ordered coordinates and timestamps`() {
+        val xml = """<kml xmlns:gx="http://www.google.com/kml/ext/2.2"><Placemark><gx:Track>
+          <when>2024-01-01T10:00:00Z</when><when>2024-01-01T10:01:00Z</when>
+          <gx:coord>-15 28 0</gx:coord><gx:coord>-15.1 28.1 0</gx:coord>
+          </gx:Track></Placemark></kml>"""
+        val samples = parser.read(TrackImportSource("track.kml", xml.toByteArray())).single().samples
+        assertEquals(2, samples.size)
+        assertEquals(1704103260000L, samples.last().timestampEpochMs)
+    }
+
+    @Test fun `KMZ imports the contained track KML`() {
+        val zipped = ByteArrayOutputStream().also { output ->
+            ZipOutputStream(output).use { zip ->
+                zip.putNextEntry(ZipEntry("doc.kml"))
+                zip.write("<kml><LineString><coordinates>-15,28 -15.1,28.1</coordinates></LineString></kml>".toByteArray())
+                zip.closeEntry()
+            }
+        }.toByteArray()
+        assertEquals(2, parser.read(TrackImportSource("track.kmz", zipped)).single().samples.size)
     }
 }
