@@ -1,5 +1,7 @@
 package org.solidcoder.trackchecker.scoring.application.usecases
 
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import org.solidcoder.trackchecker.routes.domain.model.RouteId
 import org.solidcoder.trackchecker.scoring.domain.model.TrackEvaluation
 import org.solidcoder.trackchecker.scoring.domain.repositories.EvaluationRepository
@@ -24,7 +26,11 @@ class TrackCheckActions(
             EvaluatedTrack(track, evaluate(routeId, track.id))
         } catch (error: Exception) {
             // A failed import must not leave a track without its expected evaluation.
-            tracks.delete(track.id)
+            try {
+                withContext(NonCancellable) { tracks.delete(track.id) }
+            } catch (cleanupFailure: Exception) {
+                error.addSuppressed(cleanupFailure)
+            }
             throw error
         }
     }
