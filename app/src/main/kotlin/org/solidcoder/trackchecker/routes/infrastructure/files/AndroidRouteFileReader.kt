@@ -7,10 +7,19 @@ import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.solidcoder.trackchecker.routes.application.ports.RouteImportSource
+import org.solidcoder.trackchecker.tracks.application.ports.TrackImportSource
 
 /** Reads a selected document once, without retaining an Android URI permission. */
 class AndroidRouteFileReader(private val contentResolver: ContentResolver) {
-    suspend fun read(uri: Uri): RouteImportSource = withContext(Dispatchers.IO) {
+    suspend fun read(uri: Uri): RouteImportSource = readFile(uri, 10 * 1024 * 1024).let { (name, bytes) ->
+        RouteImportSource(name, bytes)
+    }
+
+    suspend fun readTrack(uri: Uri): TrackImportSource = readFile(uri, 20 * 1024 * 1024).let { (name, bytes) ->
+        TrackImportSource(name, bytes)
+    }
+
+    private suspend fun readFile(uri: Uri, maximumBytes: Int): Pair<String, ByteArray> = withContext(Dispatchers.IO) {
         val name = contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
             ?.use { cursor ->
                 if (cursor.moveToFirst()) cursor.getString(0) else null
@@ -23,12 +32,12 @@ class AndroidRouteFileReader(private val contentResolver: ContentResolver) {
             while (true) {
                 val bytesRead = input.read(buffer)
                 if (bytesRead < 0) break
-                require(output.size() + bytesRead <= 10 * 1024 * 1024) {
-                    "El archivo supera 10 MB"
+                require(output.size() + bytesRead <= maximumBytes) {
+                    "El archivo supera el tamaño máximo permitido"
                 }
                 output.write(buffer, 0, bytesRead)
             }
         }
-        RouteImportSource(name, output.toByteArray())
+        name to output.toByteArray()
     }
 }

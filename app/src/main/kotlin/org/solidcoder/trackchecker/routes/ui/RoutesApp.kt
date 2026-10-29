@@ -15,6 +15,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import org.solidcoder.trackchecker.routes.application.usecases.RouteUseCases
 import org.solidcoder.trackchecker.routes.application.ports.RouteImportSource
+import org.solidcoder.trackchecker.scoring.application.usecases.TrackCheckActions
+import org.solidcoder.trackchecker.tracks.application.ports.TrackImportSource
 import org.solidcoder.trackchecker.routes.domain.model.RouteId
 import org.solidcoder.trackchecker.routes.domain.model.*
 import org.solidcoder.trackchecker.routes.ui.screens.RoutesListScreen
@@ -23,9 +25,13 @@ import org.solidcoder.trackchecker.routes.ui.screens.RouteReviewScreen
 @Composable
 fun RoutesApp(
     actions: RouteUseCases,
-    readSelectedRoute: suspend (Uri) -> RouteImportSource
+    trackChecks: TrackCheckActions,
+    readSelectedRoute: suspend (Uri) -> RouteImportSource,
+    readSelectedTrack: suspend (Uri) -> TrackImportSource
 ) {
-    val viewModel: RoutesViewModel = viewModel(factory = remember(actions) { RoutesViewModel.factory(actions) })
+    val viewModel: RoutesViewModel = viewModel(factory = remember(actions, trackChecks) {
+        RoutesViewModel.factory(actions, trackChecks)
+    })
     val routesState by viewModel.routes.collectAsStateWithLifecycle()
     val reviewState by viewModel.review.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
@@ -39,6 +45,19 @@ fun RoutesApp(
             try {
                 val source = readSelectedRoute(uri)
                 viewModel.import(source) { selectedRouteId = it.value }
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                viewModel.report(error)
+            }
+        }
+    }
+
+    val trackFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        val routeId = selectedRouteId?.let(::RouteId)
+        if (uri != null && routeId != null) scope.launch {
+            try {
+                viewModel.importTrack(routeId, readSelectedTrack(uri))
             } catch (error: kotlinx.coroutines.CancellationException) {
                 throw error
             } catch (error: Exception) {
@@ -94,7 +113,11 @@ fun RoutesApp(
                 onApplyPattern = { pattern, replace ->
                     viewModel.applyPattern(RouteId(selectedRouteId!!), pattern, replace)
                 },
-                onMarkReady = { viewModel.markReady(RouteId(selectedRouteId!!)) }
+                onMarkReady = { viewModel.markReady(RouteId(selectedRouteId!!)) },
+                onImportTrack = { trackFilePicker.launch(arrayOf("*/*")) },
+                onSelectTrack = viewModel::selectTrack,
+                onRecalculateTrack = { viewModel.recalculateTrack(RouteId(selectedRouteId!!), it) },
+                onDeleteTrack = { viewModel.deleteTrack(RouteId(selectedRouteId!!), it) }
             )
         }
     }
