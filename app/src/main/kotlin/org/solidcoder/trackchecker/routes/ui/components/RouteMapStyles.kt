@@ -48,7 +48,12 @@ internal object RouteMapStyles {
                     .put("hillshade-illumination-direction", 315)
                     .put("hillshade-exaggeration", 0.45)
             )
-        layers.put(firstLabelIndex, hillshade)
+        val orderedLayers = JSONArray()
+        for (index in 0..layers.length()) {
+            if (index == firstLabelIndex) orderedLayers.put(hillshade)
+            if (index < layers.length()) orderedLayers.put(layers.get(index))
+        }
+        style.put("layers", orderedLayers)
         return Style.Builder().fromJson(style.toString())
     }
 
