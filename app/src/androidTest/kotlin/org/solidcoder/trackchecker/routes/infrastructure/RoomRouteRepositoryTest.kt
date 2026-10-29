@@ -18,6 +18,8 @@ import org.solidcoder.trackchecker.routes.domain.model.RouteId
 import org.solidcoder.trackchecker.routes.domain.model.RoutePoint
 import org.solidcoder.trackchecker.routes.domain.model.RoutePointId
 import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
+import org.solidcoder.trackchecker.routes.domain.model.DetectionRadius
+import org.solidcoder.trackchecker.routes.domain.model.ScoringPattern
 import org.solidcoder.trackchecker.routes.infrastructure.persistence.RoomRouteRepository
 import org.solidcoder.trackchecker.routes.infrastructure.persistence.RoutesDatabase
 
@@ -42,6 +44,20 @@ class RoomRouteRepositoryTest {
 
         val restored = requireNotNull(repository.findById(original.id))
         assertEquals(original.name, restored.name)
+        assertEquals(original.points, restored.points)
+    }
+
+    @Test fun savingAndRestoringPreservesScoringPatternAndRadiusOverrides() = runBlocking {
+        val original = route("configured")
+            .changeDefaultDetectionRadius(DetectionRadius(75.0))
+            .overridePointDetectionRadius(RoutePointId("wp1-configured"), DetectionRadius(120.0))
+            .overridePointScore(RoutePointId("wp1-configured"), 25)
+            .applyScoringPattern(ScoringPattern.MIXED)
+        repository.save(original)
+
+        val restored = requireNotNull(repository.findById(original.id))
+        assertEquals(original.defaultDetectionRadius, restored.defaultDetectionRadius)
+        assertEquals(original.scoringPattern, restored.scoringPattern)
         assertEquals(original.points, restored.points)
     }
 
