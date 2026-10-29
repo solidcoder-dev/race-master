@@ -19,6 +19,7 @@ import org.solidcoder.trackchecker.routes.ui.components.PointEditorSheet
 import org.solidcoder.trackchecker.routes.ui.components.RouteIssues
 import org.solidcoder.trackchecker.routes.ui.components.RouteMap
 import org.solidcoder.trackchecker.routes.ui.components.PointTypeDot
+import org.solidcoder.trackchecker.routes.ui.components.PointNameSuggestions
 import org.solidcoder.trackchecker.routes.ui.components.displayName
 import org.solidcoder.trackchecker.routes.ui.components.displayMessage
 
@@ -147,7 +148,7 @@ fun RouteReviewScreen(
     selectedPoint?.let { point ->
         PointEditorSheet(
             point = point,
-            suggestedName = route.suggestUniquePointName(point.id),
+            suggestedName = PointNameSuggestions.forPoint(route.points, point.id),
             onDismiss = { editingPointId = null },
             onSave = { name, type ->
                 onEdit(point.id, name, type)
