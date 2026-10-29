@@ -77,6 +77,20 @@ class Route private constructor(
         return Route(id, name, updatedPoints, RouteStatus.DRAFT, importedAtEpochMs, defaultDetectionRadius, pattern)
     }
 
+    fun updatePoints(pointIds: Set<RoutePointId>, changes: PointChanges): Route {
+        require(pointIds.isNotEmpty()) { "Select at least one point" }
+        require(points.count { it.id in pointIds } == pointIds.size) { "Unknown point in selection" }
+        val updated = points.map { point ->
+            if (point.id in pointIds) changes.applyTo(point) else point
+        }
+        if (changes.type == RoutePointType.START || changes.type == RoutePointType.FINISH) {
+            require(updated.count { it.type == changes.type } == 1) {
+                "Only one start or finish is allowed"
+            }
+        }
+        return Route(id, name, updated, RouteStatus.DRAFT, importedAtEpochMs, defaultDetectionRadius, scoringPattern)
+    }
+
     fun renamePoint(pointId: RoutePointId, newName: String): Route =
         editPoint(pointId) { it.rename(newName) }
 

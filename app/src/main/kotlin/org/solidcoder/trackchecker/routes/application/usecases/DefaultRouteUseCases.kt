@@ -16,6 +16,9 @@ data class RouteUseCases(
     val import: ImportRouteUseCase,
     val rename: RenameRouteUseCase,
     val editPoint: EditRoutePointDetailsUseCase,
+    val editPoints: EditRoutePointsUseCase,
+    val setRadius: SetRouteDetectionRadiusUseCase,
+    val applyPattern: ApplyRouteScoringPatternUseCase,
     val validate: ValidateRouteUseCase,
     val markReady: MarkRouteReadyUseCase,
     val delete: DeleteRouteUseCase
@@ -56,6 +59,18 @@ fun routeUseCases(
         val route = repository.findById(details.routeId) ?: error("Ruta no encontrada")
         repository.save(route.renamePoint(details.pointId, details.name)
             .changePointType(details.pointId, details.type))
+    },
+    editPoints = EditRoutePointsUseCase { command ->
+        val route = repository.findById(command.routeId) ?: error("Ruta no encontrada")
+        repository.save(route.updatePoints(command.pointIds, command.changes))
+    },
+    setRadius = SetRouteDetectionRadiusUseCase { routeId, radius ->
+        val route = repository.findById(routeId) ?: error("Ruta no encontrada")
+        repository.save(route.changeDefaultDetectionRadius(radius))
+    },
+    applyPattern = ApplyRouteScoringPatternUseCase { command ->
+        val route = repository.findById(command.routeId) ?: error("Ruta no encontrada")
+        repository.save(route.applyScoringPattern(command.pattern, command.replaceOverrides))
     },
     validate = ValidateRouteUseCase { id ->
         val route = repository.findById(id) ?: error("Ruta no encontrada")

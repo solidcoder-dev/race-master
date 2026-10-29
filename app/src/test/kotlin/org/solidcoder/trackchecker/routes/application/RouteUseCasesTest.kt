@@ -9,6 +9,8 @@ import org.junit.Assert.*
 import org.junit.Test
 import org.solidcoder.trackchecker.routes.application.ports.*
 import org.solidcoder.trackchecker.routes.application.usecases.EditRoutePointDetails
+import org.solidcoder.trackchecker.routes.application.usecases.EditRoutePoints
+import org.solidcoder.trackchecker.routes.application.usecases.ApplyRouteScoringPattern
 import org.solidcoder.trackchecker.routes.application.usecases.routeUseCases
 import org.solidcoder.trackchecker.routes.domain.model.*
 import org.solidcoder.trackchecker.routes.domain.repositories.RouteRepository
@@ -62,6 +64,44 @@ class RouteUseCasesTest {
         assertEquals("WP04 barranco", edited.points[1].name)
         assertEquals("WP04", edited.points[2].name)
         assertEquals(id, edited.points[1].id)
+    }
+
+    @Test fun `bulk edits persist together and preserve the other point values`() = runBlocking {
+        val db = MemoryRoutes()
+        val actions = routeUseCases(db, db, reader)
+        val route = actions.import(source())
+        actions.setRadius(route.id, DetectionRadius(75.0))
+        actions.editPoints(EditRoutePoints(route.id, setOf(route.points[1].id, route.points[2].id),
+            PointChanges(score = OverrideUpdate.Set(30), radius = OverrideUpdate.Set(DetectionRadius(90.0)))))
+        val changed = checkNotNull(actions.get(route.id))
+        assertEquals(75.0, changed.detectionRadiusFor(route.points[0].id).meters, 0.0)
+        assertEquals(90.0, changed.detectionRadiusFor(route.points[1].id).meters, 0.0)
+        assertEquals(30, changed.points[2].scoreValueOverride)
+    }
+
+    @Test fun `failed bulk edit persists none of its changes`() = runBlocking {
+        val db = MemoryRoutes()
+        val actions = routeUseCases(db, db, reader)
+        val route = actions.import(source())
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                actions.editPoints(EditRoutePoints(route.id, setOf(route.points[1].id, route.points[2].id),
+                    PointChanges(type = RoutePointType.START)))
+            }
+        }
+        assertEquals(route.points, actions.get(route.id)?.points)
+    }
+
+    @Test fun `applying a pattern preserves personalized point values`() = runBlocking {
+        val db = MemoryRoutes()
+        val actions = routeUseCases(db, db, reader)
+        val route = actions.import(source())
+        actions.editPoints(EditRoutePoints(route.id, setOf(route.points[1].id),
+            PointChanges(score = OverrideUpdate.Set(25))))
+        actions.applyPattern(ApplyRouteScoringPattern(route.id, ScoringPattern.MIXED))
+        val changed = checkNotNull(actions.get(route.id))
+        assertEquals(PointScoreEffect(whenPassed = 25), changed.scoringFor(route.points[1].id))
+        assertEquals(PointScoreEffect(whenPassed = 10), changed.scoringFor(route.points[2].id))
     }
 
     @Test fun `validating reports issues without changing the route`() = runBlocking {

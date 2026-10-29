@@ -79,6 +79,37 @@ class RouteTest {
                 .detectionRadiusFor(waypoint.id).meters, 0.0)
     }
 
+    @Test fun `bulk scoring changes only the selected IDs and only requested fields`() {
+        val original = route()
+        val edited = original.updatePoints(setOf(waypoint.id, duplicate.id), PointChanges(
+            score = OverrideUpdate.Set(25)
+        ))
+        assertEquals(25, edited.points[1].scoreValueOverride)
+        assertEquals(25, edited.points[2].scoreValueOverride)
+        assertEquals(waypoint.type, edited.points[1].type)
+        assertNull(edited.points[1].detectionRadiusOverride)
+        assertNull(edited.points[0].scoreValueOverride)
+        assertNull(original.points[1].scoreValueOverride)
+    }
+
+    @Test fun `bulk radius reset does not change custom scores`() {
+        val original = route().overridePointScore(waypoint.id, 40)
+            .overridePointDetectionRadius(waypoint.id, DetectionRadius(100.0))
+        val edited = original.updatePoints(setOf(waypoint.id), PointChanges(
+            radius = OverrideUpdate.Set(null)
+        ))
+        assertEquals(40, edited.points[1].scoreValueOverride)
+        assertEquals(50.0, edited.detectionRadiusFor(waypoint.id).meters, 0.0)
+    }
+
+    @Test fun `bulk edit cannot create multiple starting points`() {
+        val original = route()
+        assertThrows(IllegalArgumentException::class.java) {
+            original.updatePoints(setOf(waypoint.id, duplicate.id), PointChanges(type = RoutePointType.START))
+        }
+        assertEquals(RoutePointType.WAYPOINT, original.points[1].type)
+    }
+
     @Test fun `renaming a point preserves its identity and the original route`() {
         val original = route()
         val renamed = original.renamePoint(waypoint.id, "Barranco")
