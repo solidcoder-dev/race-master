@@ -13,25 +13,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Typeface
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.maplibre.android.MapLibre
-import org.maplibre.android.annotations.MarkerOptions
-import org.maplibre.android.annotations.IconFactory
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
-import org.solidcoder.trackchecker.routes.domain.model.Route
+import org.solidcoder.trackchecker.routes.domain.model.RouteId
+import org.solidcoder.trackchecker.routes.domain.model.RoutePoint
 import org.solidcoder.trackchecker.routes.domain.model.RoutePointId
-import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
 import org.solidcoder.trackchecker.BuildConfig
 
 /**
@@ -44,7 +38,8 @@ import org.solidcoder.trackchecker.BuildConfig
 @Suppress("DEPRECATION")
 @Composable
 fun RouteMap(
-    route: Route,
+    routeId: RouteId,
+    points: List<RoutePoint>,
     selectedPointId: RoutePointId?,
     onPointClick: (RoutePointId) -> Unit,
     modifier: Modifier = Modifier
@@ -53,13 +48,14 @@ fun RouteMap(
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val currentCallback by rememberUpdatedState(onPointClick)
     val providerKey = BuildConfig.MAPTILER_API_KEY
-    var baseMap by remember(route.id) { mutableStateOf(RouteMapStyle.SATELLITE) }
+    var baseMap by remember(routeId) { mutableStateOf(RouteMapStyle.SATELLITE) }
     MapLibre.getInstance(context)
 
-    val mapView = remember(route.id) { MapView(context).apply { onCreate(null) } }
-    var controller by remember(route.id) { mutableStateOf<MapLibreMap?>(null) }
-    var styleVersion by remember(route.id) { mutableIntStateOf(0) }
-    var initialCameraSet by remember(route.id) { mutableStateOf(false) }
+    val mapView = remember(routeId) { MapView(context).apply { onCreate(null) } }
+    val markers = remember(routeId) { RouteMapMarkers(context) }
+    var controller by remember(routeId) { mutableStateOf<MapLibreMap?>(null) }
+    var styleVersion by remember(routeId) { mutableIntStateOf(0) }
+    var initialCameraSet by remember(routeId) { mutableStateOf(false) }
 
     DisposableEffect(mapView, lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
@@ -89,7 +85,6 @@ fun RouteMap(
     LaunchedEffect(controller, baseMap) {
         controller?.let { map ->
             map.setStyle(RouteMapStyles.url(baseMap, providerKey)) {
-                val points = route.points
                 if (!initialCameraSet && points.isNotEmpty()) {
                     val bounds = LatLngBounds.Builder()
                     points.forEach { point ->
@@ -113,38 +108,23 @@ fun RouteMap(
         }
     }
 
-    LaunchedEffect(controller, styleVersion, route.points, selectedPointId) {
+    LaunchedEffect(controller, styleVersion, points) {
         controller?.let { map ->
-            map.clear()
-            val icons = RoutePointType.entries.associateWith { type ->
-                IconFactory.getInstance(context).fromBitmap(pointMarkerBitmap(type, context.resources.displayMetrics.density))
-            }
-            val selectedIcons = RoutePointType.entries.associateWith { type ->
-                IconFactory.getInstance(context).fromBitmap(pointMarkerBitmap(type, context.resources.displayMetrics.density, selected = true))
-            }
-            route.points.forEach { point ->
-                map.addMarker(
-                    MarkerOptions()
-                        .position(LatLng(point.coordinates.latitude, point.coordinates.longitude))
-                        .title(point.name)
-                        .icon(if (point.id == selectedPointId) selectedIcons.getValue(point.type) else icons.getValue(point.type))
-                        .snippet(point.id.value)
-                )
-            }
-            map.setOnMarkerClickListener { marker ->
-                val id = marker.snippet
-                if (id != null) currentCallback(RoutePointId(id))
-                true
-            }
+            markers.show(map, points, selectedPointId) { currentCallback(it) }
         }
     }
 
-    LaunchedEffect(controller, selectedPointId) {
-        val point = route.points.firstOrNull { it.id == selectedPointId }
+    LaunchedEffect(controller, selectedPointId, points) {
+        val point = points.firstOrNull { it.id == selectedPointId }
         if (point != null) {
-            controller?.animateCamera(CameraUpdateFactory.newLatLng(
-                LatLng(point.coordinates.latitude, point.coordinates.longitude)
-            ))
+            controller?.let { map ->
+                markers.select(map, selectedPointId)
+                map.animateCamera(CameraUpdateFactory.newLatLng(
+                    LatLng(point.coordinates.latitude, point.coordinates.longitude)
+                ))
+            }
+        } else {
+            controller?.let { markers.select(it, null) }
         }
     }
 
@@ -164,22 +144,4 @@ fun RouteMap(
             }
         }
     }
-}
-
-private fun pointMarkerBitmap(type: RoutePointType, density: Float, selected: Boolean = false): Bitmap {
-    val size = (30 * density).toInt().coerceAtLeast(30)
-    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(bitmap)
-    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    val center = size / 2f
-    paint.color = if (selected) 0xFFFFD54F.toInt() else android.graphics.Color.WHITE
-    canvas.drawCircle(center, center, size * 0.47f, paint)
-    paint.color = PointVisuals.color(type)
-    canvas.drawCircle(center, center, size * 0.39f, paint)
-    paint.color = android.graphics.Color.WHITE
-    paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-    paint.textSize = size * 0.42f
-    paint.textAlign = Paint.Align.CENTER
-    canvas.drawText(PointVisuals.symbol(type), center, center - (paint.ascent() + paint.descent()) / 2f, paint)
-    return bitmap
 }
