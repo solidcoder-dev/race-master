@@ -9,6 +9,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.solidcoder.trackchecker.routes.infrastructure.persistence.MIGRATION_1_2
+import org.solidcoder.trackchecker.routes.infrastructure.persistence.MIGRATION_2_3
 import org.solidcoder.trackchecker.routes.infrastructure.persistence.RoutesDatabase
 
 @RunWith(AndroidJUnit4::class)
@@ -43,6 +44,23 @@ class RoutesMigrationTest {
                     assertTrue(cursor.isNull(2))
                     assertTrue(cursor.isNull(3))
                 }
+        }
+    }
+
+    @Test fun migrationAddsTrackTablesWithoutChangingExistingRoutes() {
+        val name = "route-track-migration-test"
+        helper.createDatabase(name, 2).apply {
+            execSQL("INSERT INTO routes (id, name, status, importedAtEpochMs, defaultDetectionRadiusMeters) VALUES ('route', 'Etapa', 'READY', 100, 50.0)")
+            close()
+        }
+        helper.runMigrationsAndValidate(name, 3, true, MIGRATION_2_3).use { database ->
+            database.query("SELECT name, status FROM routes WHERE id = 'route'").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("Etapa", cursor.getString(0))
+                assertEquals("READY", cursor.getString(1))
+            }
+            database.execSQL("INSERT INTO tracks (id, name, importedAtEpochMs) VALUES ('track', 'GPS', 101)")
+            database.execSQL("INSERT INTO track_samples (trackId, segmentIndex, sampleIndex, latitude, longitude) VALUES ('track', 0, 0, 28.0, -15.0)")
         }
     }
 }
