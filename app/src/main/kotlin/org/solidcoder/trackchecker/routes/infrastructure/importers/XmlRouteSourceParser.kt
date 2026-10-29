@@ -9,7 +9,6 @@ import org.solidcoder.trackchecker.routes.application.ports.ImportedPoint
 import org.solidcoder.trackchecker.routes.application.ports.RouteSourceReader
 import org.solidcoder.trackchecker.routes.application.ports.RouteImportSource
 import org.solidcoder.trackchecker.routes.domain.model.Coordinates
-import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -110,7 +109,7 @@ class XmlRouteSourceParser : RouteSourceReader {
         require(components.size >= 2) { "Coordenadas KML incompletas" }
         val longitude = components[0].toDoubleOrNull() ?: error("Longitud KML inválida")
         val latitude = components[1].toDoubleOrNull() ?: error("Latitud KML inválida")
-        return ImportedPoint(name, Coordinates(latitude, longitude), classify(name, description, explicitType))
+        return ImportedPoint(name, Coordinates(latitude, longitude), ImportedPointTypeClassifier.classify(name, description, explicitType))
     }
 
     private fun parseGpx(parser: XmlPullParser): List<ImportedPoint> {
@@ -149,7 +148,7 @@ class XmlRouteSourceParser : RouteSourceReader {
                 ) {
                     val pointLatitude = latitude ?: error("Latitud GPX inválida")
                     val pointLongitude = longitude ?: error("Longitud GPX inválida")
-                    points += ImportedPoint(name, Coordinates(pointLatitude, pointLongitude), classify(name, description, explicitType))
+                    points += ImportedPoint(name, Coordinates(pointLatitude, pointLongitude), ImportedPointTypeClassifier.classify(name, description, explicitType))
                     pointDepth = -1
                 }
             }
@@ -159,25 +158,6 @@ class XmlRouteSourceParser : RouteSourceReader {
 
     private fun isTypeField(name: String?): Boolean =
         name?.lowercase(Locale.ROOT) in setOf("type", "pointtype", "point_type", "category")
-
-    private fun classify(name: String?, description: String?, explicitType: String?): RoutePointType =
-        listOf(explicitType, description, name).firstNotNullOfOrNull { candidate ->
-            classifyText(candidate)
-        } ?: RoutePointType.OTHER
-
-    private fun classifyText(value: String?): RoutePointType? {
-        val normalized = value?.trim()?.uppercase(Locale.ROOT).orEmpty()
-        val token = normalized.split(Regex("[^A-Z0-9]+"))
-            .firstOrNull().orEmpty()
-        return when {
-            token.startsWith("SALIDA") || token.startsWith("START") -> RoutePointType.START
-            token.startsWith("META") || token.startsWith("FINISH") || token.startsWith("LLEGADA") -> RoutePointType.FINISH
-            token.startsWith("WPE") || token == "ECLIPSE" -> RoutePointType.ECLIPSE_WAYPOINT
-            token.startsWith("CP") || token == "CHECKPOINT" -> RoutePointType.CHECKPOINT
-            token.startsWith("WP") || token == "WAYPOINT" -> RoutePointType.WAYPOINT
-            else -> null
-        }
-    }
 
     private fun unzipKml(data: ByteArray): ByteArray {
         ZipInputStream(ByteArrayInputStream(data)).use { zip ->
