@@ -60,6 +60,9 @@ fun BulkPointEditorSheet(
             }
             HorizontalDivider()
             Text("Puntuación", style = MaterialTheme.typography.titleSmall)
+            Text("Los patrones actuales solo puntúan waypoints y checkpoints.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
             BulkModeSelector(scoreMode, onChange = { scoreMode = it })
             if (scoreMode == BulkEditMode.CUSTOM) {
                 OutlinedTextField(
