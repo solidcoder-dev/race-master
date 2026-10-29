@@ -9,9 +9,11 @@ import org.solidcoder.trackchecker.tracks.application.ports.TrackImportSource
 import org.solidcoder.trackchecker.tracks.application.usecases.ImportTrackUseCase
 import org.solidcoder.trackchecker.tracks.domain.model.Track
 import org.solidcoder.trackchecker.tracks.domain.model.TrackId
+import org.solidcoder.trackchecker.tracks.domain.model.TrackSummary
 import org.solidcoder.trackchecker.tracks.domain.repositories.TrackRepository
 
 data class EvaluatedTrack(val track: Track, val evaluation: TrackEvaluation)
+data class EvaluatedTrackSummary(val track: TrackSummary, val evaluation: TrackEvaluation)
 
 /** Coordinates imported data and evaluations without giving UI direct repository access. */
 class TrackCheckActions(
@@ -35,10 +37,15 @@ class TrackCheckActions(
         }
     }
 
-    suspend fun list(routeId: RouteId): List<EvaluatedTrack> =
-        evaluations.listForRoute(routeId).mapNotNull { evaluation ->
-            tracks.findById(evaluation.trackId)?.let { EvaluatedTrack(it, evaluation) }
+    suspend fun list(routeId: RouteId): List<EvaluatedTrackSummary> {
+        val byTrackId = evaluations.listForRoute(routeId).associateBy { it.trackId }
+        return tracks.listForRoute(routeId).mapNotNull { track ->
+            byTrackId[track.id]?.let { EvaluatedTrackSummary(track, it) }
         }
+    }
+
+    suspend fun load(routeId: RouteId, trackId: TrackId): Track? =
+        tracks.findById(trackId)?.takeIf { it.routeId == routeId }
 
     suspend fun recalculate(routeId: RouteId, trackId: TrackId): TrackEvaluation = evaluate(routeId, trackId)
 

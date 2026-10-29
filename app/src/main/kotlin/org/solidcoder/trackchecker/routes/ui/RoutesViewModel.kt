@@ -98,9 +98,27 @@ class RoutesViewModel(
     }
 
     fun selectTrack(id: TrackId?) {
-        mutableReview.update { current ->
-            if (current is RouteReviewUiState.Loaded && (id == null || current.tracks.any { it.track.id == id }))
-                current.copy(selectedTrackId = id) else current
+        val loaded = mutableReview.value as? RouteReviewUiState.Loaded ?: return
+        if (id != null && loaded.tracks.none { it.track.id == id }) return
+        mutableReview.value = loaded.copy(
+            selectedTrackId = id,
+            selectedTrack = loaded.selectedTrack?.takeIf { it.id == id }
+        )
+        if (id != null && loaded.selectedTrack?.id != id) {
+            viewModelScope.launch {
+                try {
+                    val selected = trackChecks.load(loaded.route.id, id)
+                    mutableReview.update { current ->
+                        if (current is RouteReviewUiState.Loaded &&
+                            current.route.id == loaded.route.id && current.selectedTrackId == id
+                        ) current.copy(selectedTrack = selected) else current
+                    }
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Exception) {
+                    report(error)
+                }
+            }
         }
     }
 
@@ -183,7 +201,11 @@ class RoutesViewModel(
         } else {
             val tracks = trackChecks.list(id)
             val selected = previous?.selectedTrackId?.takeIf { selectedId -> tracks.any { it.track.id == selectedId } }
-            RouteReviewUiState.Loaded(route, actions.validate(id).issues, tracks, selected)
+            val geometry = selected?.let { trackId ->
+                previous?.selectedTrack?.takeIf { it.id == trackId && it.routeId == id }
+                    ?: trackChecks.load(id, trackId)
+            }
+            RouteReviewUiState.Loaded(route, actions.validate(id).issues, tracks, selected, geometry)
         }
     }
 

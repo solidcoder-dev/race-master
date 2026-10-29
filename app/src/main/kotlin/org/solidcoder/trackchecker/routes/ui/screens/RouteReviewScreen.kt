@@ -288,7 +288,7 @@ fun RouteReviewScreen(
             showDetectionRadii = showRadii,
             selectedPointId = if (activeTrack == null) editingPointId else inspectedPointId,
             selectedPointIds = if (activeTrack == null) selectedIds else emptySet(),
-            track = activeTrack?.track,
+            track = loaded.selectedTrack?.takeIf { it.id == activeTrack?.track?.id },
             passageStatuses = passageById.mapValues { it.value.status },
             modifier = Modifier.fillMaxSize().padding(contentPadding),
             onPointClick = { openPoint(it) },

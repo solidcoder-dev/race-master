@@ -2,8 +2,9 @@ package org.solidcoder.trackchecker.routes.ui
 
 import org.solidcoder.trackchecker.routes.domain.model.Route
 import org.solidcoder.trackchecker.routes.domain.model.RouteIssue
-import org.solidcoder.trackchecker.scoring.application.usecases.EvaluatedTrack
+import org.solidcoder.trackchecker.scoring.application.usecases.EvaluatedTrackSummary
 import org.solidcoder.trackchecker.tracks.domain.model.TrackId
+import org.solidcoder.trackchecker.tracks.domain.model.Track
 
 data class RoutesUiState(
     val routes: List<Route> = emptyList(),
@@ -20,8 +21,9 @@ sealed interface RouteReviewUiState {
     data class Loaded(
         val route: Route,
         val issues: List<RouteIssue>,
-        val tracks: List<EvaluatedTrack> = emptyList(),
+        val tracks: List<EvaluatedTrackSummary> = emptyList(),
         val selectedTrackId: TrackId? = null,
+        val selectedTrack: Track? = null,
         val importingTrack: Boolean = false
     ) : RouteReviewUiState
     data object NotFound : RouteReviewUiState
