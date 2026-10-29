@@ -30,8 +30,8 @@ class XmlRouteSourceParser(
         }
         val parser = createParser().apply {
             setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
-            // Android's pull parser ignores DTD declarations unless processing is enabled.
-            setFeature(XmlPullParser.FEATURE_PROCESS_DOCDECL, false)
+            // DTDs are rejected in the token stream; parsers vary in support for
+            // explicitly setting the optional process-docdecl feature.
             setInput(ByteArrayInputStream(bytes), null)
         }
         parser.nextTag()
