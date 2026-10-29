@@ -53,7 +53,7 @@ internal class RouteMapMarkers(context: Context) {
 
     fun select(map: MapLibreMap, selection: Set<RoutePointId>) {
         if (selectedPointIds == selection) return
-        val changed = selectedPointIds union selection
+        val changed = (selectedPointIds - selection) + (selection - selectedPointIds)
         selectedPointIds = selection
         changed.forEach { id ->
             val marker = markers[id] ?: return@forEach
