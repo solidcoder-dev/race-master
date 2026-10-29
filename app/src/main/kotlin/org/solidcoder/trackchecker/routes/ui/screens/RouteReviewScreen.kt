@@ -4,13 +4,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import org.solidcoder.trackchecker.routes.domain.model.*
 import org.solidcoder.trackchecker.routes.ui.RouteReviewUiState
 import org.solidcoder.trackchecker.routes.ui.components.PointEditorSheet
@@ -50,12 +52,16 @@ fun RouteReviewScreen(
     var editingPointId by remember(route.id) { mutableStateOf<RoutePointId?>(null) }
     val selectedPoint = route.points.firstOrNull { it.id == editingPointId }
     val sheetScaffold = rememberBottomSheetScaffoldState()
-    val scope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val maxPeekHeight = LocalConfiguration.current.screenHeightDp.dp * 0.72f
+    var summaryHeightPx by remember(route.id) { mutableIntStateOf(0) }
+    val peekHeight = if (summaryHeightPx == 0) 310.dp else
+        minOf(maxPeekHeight, with(density) { summaryHeightPx.toDp() } + 48.dp)
 
     BottomSheetScaffold(
         modifier = modifier,
         scaffoldState = sheetScaffold,
-        sheetPeekHeight = 218.dp,
+        sheetPeekHeight = peekHeight,
         topBar = {
             TopAppBar(
                 title = { Text(route.name, maxLines = 1) },
@@ -63,49 +69,53 @@ fun RouteReviewScreen(
             )
         },
         sheetContent = {
-            Column(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().fillMaxHeight(0.86f),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    "${route.points.size} puntos · ${loaded.issues.size} incidencias",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                RouteIssues(
-                    route = route,
-                    issues = loaded.issues,
-                    onSelectPoint = { editingPointId = it }
-                )
-                TextButton(onClick = { scope.launch { sheetScaffold.bottomSheetState.expand() } }) {
-                    Text("Ver todos los puntos")
-                }
-                Button(
-                    onClick = onMarkReady,
-                    enabled = route.status != RouteStatus.READY && loaded.issues.none { it.severity == IssueSeverity.ERROR },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(if (route.status == RouteStatus.READY) "Ruta lista" else "Validar ruta")
-                }
-                LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 360.dp)) {
-                    items(route.points, key = { it.id.value }) { point ->
-                        Row(
-                            Modifier.fillMaxWidth()
-                                .clickable { editingPointId = point.id }
-                                .padding(vertical = 12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                item {
+                    Column(
+                        Modifier.fillMaxWidth().onSizeChanged { summaryHeightPx = it.height },
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            "${route.points.size} puntos · ${loaded.issues.size} incidencias",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        RouteIssues(route = route, issues = loaded.issues, onSelectPoint = { editingPointId = it })
+                        Button(
+                            onClick = onMarkReady,
+                            enabled = route.status != RouteStatus.READY && loaded.issues.none { it.severity == IssueSeverity.ERROR },
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Column {
-                                Text(point.name, fontWeight = FontWeight.Medium)
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    PointTypeDot(point.type)
-                                    Text(point.type.displayName(), style = MaterialTheme.typography.bodySmall)
-                                }
-                            }
-                            Text("Editar", color = MaterialTheme.colorScheme.primary)
+                            Text(if (route.status == RouteStatus.READY) "Ruta lista" else "Validar ruta")
                         }
-                        HorizontalDivider()
+                        Text(
+                            "Desliza hacia arriba para ver los puntos",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
+                }
+                items(route.points, key = { it.id.value }) { point ->
+                    Row(
+                        Modifier.fillMaxWidth().clickable { editingPointId = point.id }
+                            .padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(point.name, fontWeight = FontWeight.Medium)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                PointTypeDot(point.type)
+                                Text(point.type.displayName(), style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                        Text("›", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    HorizontalDivider()
                 }
             }
         }
