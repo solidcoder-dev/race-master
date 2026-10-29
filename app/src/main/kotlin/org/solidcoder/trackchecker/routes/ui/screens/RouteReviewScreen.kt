@@ -116,6 +116,7 @@ fun RouteReviewScreen(
     selectedPoint?.let { point ->
         PointEditorSheet(
             point = point,
+            suggestedName = route.suggestUniquePointName(point.id),
             onDismiss = { editingPointId = null },
             onSave = { name, type ->
                 onEdit(point.id, name, type)

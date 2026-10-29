@@ -27,6 +27,23 @@ class RouteTest {
         assertEquals(duplicate, renamed.points[2])
     }
 
+    @Test fun `duplicate point names have a unique non-destructive suggestion`() {
+        val route = route()
+        assertEquals("WP04B", route.suggestUniquePointName(duplicate.id))
+        assertEquals("WP04", route.points[1].name)
+        assertEquals("WP04", route.points[2].name)
+        assertNull(route.suggestUniquePointName(start.id))
+    }
+
+    @Test fun `name suggestion skips names already in use`() {
+        val route = Route.imported(RouteId("r"), "Etapa", listOf(
+            start, waypoint, duplicate, checkpoint,
+            RoutePoint(RoutePointId("used"), "WP04B", Coordinates(28.4, -15.4), RoutePointType.WAYPOINT),
+            finish
+        ), 100L)
+        assertEquals("WP04C", route.suggestUniquePointName(duplicate.id))
+    }
+
     @Test fun `editing a ready route requires revalidation`() {
         val ready = Route.imported(RouteId("ready"), "Etapa", listOf(start, waypoint, checkpoint, finish), 100L).markReady()
         assertEquals(RouteStatus.READY, ready.status)

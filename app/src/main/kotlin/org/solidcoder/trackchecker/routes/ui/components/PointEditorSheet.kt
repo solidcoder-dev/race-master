@@ -12,6 +12,7 @@ import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
 @Composable
 fun PointEditorSheet(
     point: RoutePoint,
+    suggestedName: String?,
     onDismiss: () -> Unit,
     onSave: (String, RoutePointType) -> Unit
 ) {
@@ -33,6 +34,11 @@ fun PointEditorSheet(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
+            if (suggestedName != null && name == point.name) {
+                TextButton(onClick = { name = suggestedName }) {
+                    Text("Usar nombre disponible: $suggestedName")
+                }
+            }
             Box {
                 OutlinedButton(onClick = { menuExpanded = true }) {
                     Text("Tipo: ${type.displayName()}  ▾")

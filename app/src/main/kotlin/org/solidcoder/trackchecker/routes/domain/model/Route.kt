@@ -1,5 +1,6 @@
 package org.solidcoder.trackchecker.routes.domain.model
 
+import java.util.Locale
 import org.solidcoder.trackchecker.routes.domain.services.RouteValidator
 
 enum class RouteStatus { DRAFT, READY }
@@ -50,6 +51,18 @@ class Route private constructor(
 
     fun changePointType(pointId: RoutePointId, newType: RoutePointType): Route =
         editPoint(pointId) { it.changeType(newType) }
+
+    /** Suggests a free label without changing any existing point or its identity. */
+    fun suggestUniquePointName(pointId: RoutePointId): String? {
+        val point = points.firstOrNull { it.id == pointId } ?: return null
+        val occupied = points.filter { it.id != pointId }
+            .map { it.name.trim().lowercase(Locale.ROOT) }.toSet()
+        if (point.name.lowercase(Locale.ROOT) !in occupied) return null
+        val base = point.name.trim()
+        return ('B'..'Z').asSequence().map { "$base$it" }
+            .plus(generateSequence(2) { it + 1 }.map { "$base-$it" })
+            .first { it.lowercase(Locale.ROOT) !in occupied }
+    }
 
     fun markReady(): Route {
         require(RouteValidator().validate(this).canBeReady) { "A route with blocking issues cannot be ready" }
