@@ -8,7 +8,8 @@ data class RoutePoint(
     val id: RoutePointId,
     val name: String,
     val coordinates: Coordinates,
-    val type: RoutePointType
+    val type: RoutePointType,
+    val detectionRadiusOverride: DetectionRadius? = null
 ) {
     init { require(name.isNotBlank()) { "Point name cannot be blank" } }
 
