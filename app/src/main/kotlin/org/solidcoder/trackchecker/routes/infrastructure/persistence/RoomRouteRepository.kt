@@ -19,7 +19,8 @@ class RoomRouteRepository(private val database: RoutesDatabase) : RouteRepositor
     override suspend fun save(route: Route) {
         database.withTransaction {
             dao.upsertRoute(
-                RouteRecord(route.id.value, route.name, route.status.name, route.importedAtEpochMs)
+                RouteRecord(route.id.value, route.name, route.status.name, route.importedAtEpochMs,
+                    route.defaultDetectionRadius.meters, route.scoringPattern?.name)
             )
             // Points retain their identity across route and point edits.
             dao.upsertPoints(route.points.mapIndexed { index, point ->
@@ -30,7 +31,9 @@ class RoomRouteRepository(private val database: RoutesDatabase) : RouteRepositor
                     name = point.name,
                     latitude = point.coordinates.latitude,
                     longitude = point.coordinates.longitude,
-                    type = point.type.name
+                    type = point.type.name,
+                    detectionRadiusOverrideMeters = point.detectionRadiusOverride?.meters,
+                    scoreValueOverride = point.scoreValueOverride
                 )
             })
         }
@@ -46,10 +49,14 @@ class RoomRouteRepository(private val database: RoutesDatabase) : RouteRepositor
                 id = RoutePointId(record.id),
                 name = record.name,
                 coordinates = Coordinates(record.latitude, record.longitude),
-                type = RoutePointType.valueOf(record.type)
+                type = RoutePointType.valueOf(record.type),
+                detectionRadiusOverride = record.detectionRadiusOverrideMeters?.let(::DetectionRadius),
+                scoreValueOverride = record.scoreValueOverride
             )
         },
         status = RouteStatus.valueOf(route.status),
-        importedAtEpochMs = route.importedAtEpochMs
+        importedAtEpochMs = route.importedAtEpochMs,
+        defaultDetectionRadius = DetectionRadius(route.defaultDetectionRadiusMeters),
+        scoringPattern = route.scoringPattern?.let(ScoringPattern::valueOf)
     )
 }

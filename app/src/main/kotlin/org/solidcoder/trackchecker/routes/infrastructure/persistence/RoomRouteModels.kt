@@ -1,6 +1,7 @@
 package org.solidcoder.trackchecker.routes.infrastructure.persistence
 
 import androidx.room.Embedded
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -12,7 +13,9 @@ data class RouteRecord(
     @PrimaryKey val id: String,
     val name: String,
     val status: String,
-    val importedAtEpochMs: Long
+    val importedAtEpochMs: Long,
+    @ColumnInfo(defaultValue = "50.0") val defaultDetectionRadiusMeters: Double,
+    val scoringPattern: String?
 )
 
 @Entity(
@@ -32,7 +35,9 @@ data class RoutePointRecord(
     val name: String,
     val latitude: Double,
     val longitude: Double,
-    val type: String
+    val type: String,
+    val detectionRadiusOverrideMeters: Double?,
+    val scoreValueOverride: Int?
 )
 
 data class RouteWithPoints(
