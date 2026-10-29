@@ -10,6 +10,7 @@ import org.solidcoder.trackchecker.routes.infrastructure.persistence.RoomRouteRe
 import org.solidcoder.trackchecker.routes.infrastructure.persistence.RoutesDatabase
 import org.solidcoder.trackchecker.routes.infrastructure.persistence.MIGRATION_1_2
 import org.solidcoder.trackchecker.routes.infrastructure.persistence.MIGRATION_2_3
+import org.solidcoder.trackchecker.routes.infrastructure.persistence.MIGRATION_3_4
 
 /** Single-process composition root; the domain has no Android or Room dependencies. */
 class RoutesContainer(context: Context) {
@@ -17,7 +18,7 @@ class RoutesContainer(context: Context) {
         context.applicationContext,
         RoutesDatabase::class.java,
         "track-checker-routes.db"
-    ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
+    ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
 
     private val repository = RoomRouteRepository(database)
     val fileReader = AndroidRouteFileReader(context.applicationContext.contentResolver)

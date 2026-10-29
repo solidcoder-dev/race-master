@@ -19,3 +19,13 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_track_samples_trackId` ON `track_samples` (`trackId`)")
     }
 }
+
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS `track_evaluations` (`id` TEXT NOT NULL, `routeId` TEXT NOT NULL, `trackId` TEXT NOT NULL, `routeFingerprint` TEXT NOT NULL, `evaluatedAtEpochMs` INTEGER NOT NULL, `validStart` INTEGER NOT NULL, `validFinish` INTEGER NOT NULL, `scoreTotal` INTEGER, PRIMARY KEY(`id`), FOREIGN KEY(`routeId`) REFERENCES `routes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY(`trackId`) REFERENCES `tracks`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_track_evaluations_routeId_trackId` ON `track_evaluations` (`routeId`, `trackId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_track_evaluations_trackId` ON `track_evaluations` (`trackId`)")
+        db.execSQL("CREATE TABLE IF NOT EXISTS `evaluated_points` (`evaluationId` TEXT NOT NULL, `pointId` TEXT NOT NULL, `status` TEXT NOT NULL, `minimumDistanceMeters` REAL NOT NULL, `detectionRadiusMeters` REAL NOT NULL, `scoreContribution` INTEGER, PRIMARY KEY(`evaluationId`, `pointId`), FOREIGN KEY(`evaluationId`) REFERENCES `track_evaluations`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_evaluated_points_evaluationId` ON `evaluated_points` (`evaluationId`)")
+    }
+}
