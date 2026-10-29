@@ -63,9 +63,9 @@ fun routeUseCases(
     },
     markReady = MarkRouteReadyUseCase { id ->
         val route = repository.findById(id) ?: error("Ruta no encontrada")
-        val validation = validator.validate(route)
-        if (validation.canBeReady) repository.save(route.markReady())
-        validation
+        val assessment = route.assessReadiness(validator)
+        assessment.readyRoute?.let { repository.save(it) }
+        assessment.validation
     },
     delete = DeleteRouteUseCase { repository.delete(it) }
 )

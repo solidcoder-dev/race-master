@@ -11,9 +11,10 @@ import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
 import org.solidcoder.trackchecker.routes.application.ports.RouteImportSource
 import org.solidcoder.trackchecker.routes.application.ports.RouteSourceReader
 import org.solidcoder.trackchecker.routes.infrastructure.importers.XmlRouteSourceParser
+import org.kxml2.io.KXmlParser
 
 class XmlRouteSourceParserTest {
-    private val parser: RouteSourceReader = XmlRouteSourceParser()
+    private val parser: RouteSourceReader = XmlRouteSourceParser { KXmlParser() }
 
     @Test fun `real Nomad KML contains 63 points including distinct duplicate WP04 labels`() {
         val source = checkNotNull(javaClass.classLoader?.getResourceAsStream("ET 1 WP NOMAD 2024.kml"))
@@ -52,6 +53,64 @@ class XmlRouteSourceParserTest {
         val points = parser.read(RouteImportSource("stage.gpx", gpx.toByteArray()))
         assertEquals(2, points.size)
         assertEquals(RoutePointType.ECLIPSE_WAYPOINT, points[1].type)
+    }
+
+    @Test fun `KML structured type takes priority over a misleading name`() {
+        val kml = """<kml><Placemark><name>WP01</name><ExtendedData>
+            <Data name="pointType"><value>checkpoint</value></Data>
+            </ExtendedData><Point><coordinates>-15,28</coordinates></Point></Placemark></kml>"""
+        val point = parser.read(RouteImportSource("route.kml", kml.toByteArray())).single()
+        assertEquals(RoutePointType.CHECKPOINT, point.type)
+        assertEquals("WP01", point.name)
+    }
+
+    @Test fun `KML schema data and description classify unnamed-type points`() {
+        val kml = """<kml><Document>
+            <Placemark><name>Point A</name><ExtendedData><SchemaData>
+              <SimpleData name="type">start</SimpleData>
+            </SchemaData></ExtendedData><Point><coordinates>-15,28</coordinates></Point></Placemark>
+            <Placemark><name>Point B</name><description>Checkpoint</description>
+              <Point><coordinates>-15.1,28.1</coordinates></Point></Placemark>
+            </Document></kml>"""
+        val points = parser.read(RouteImportSource("route.kml", kml.toByteArray()))
+        assertEquals(listOf(RoutePointType.START, RoutePointType.CHECKPOINT), points.map { it.type })
+    }
+
+    @Test fun `GPX type takes priority over waypoint name`() {
+        val gpx = """<gpx><wpt lat="28" lon="-15"><name>WP01</name><type>checkpoint</type></wpt></gpx>"""
+        assertEquals(RoutePointType.CHECKPOINT,
+            parser.read(RouteImportSource("route.gpx", gpx.toByteArray())).single().type)
+    }
+
+    @Test fun `free text in a description does not override a waypoint name`() {
+        val kml = """<kml><Placemark><name>WP01</name>
+            <description>Start of a difficult section</description>
+            <Point><coordinates>-15,28</coordinates></Point></Placemark></kml>"""
+        val point = parser.read(RouteImportSource("route.kml", kml.toByteArray())).single()
+        assertEquals(RoutePointType.WAYPOINT, point.type)
+    }
+
+    @Test fun `ambiguous descriptive text cannot silently classify a point`() {
+        val kml = """<kml><Placemark><name>Unnamed point</name>
+            <description>Checkpoint to check before the finish</description>
+            <Point><coordinates>-15,28</coordinates></Point></Placemark></kml>"""
+        val point = parser.read(RouteImportSource("route.kml", kml.toByteArray())).single()
+        assertEquals(RoutePointType.OTHER, point.type)
+    }
+
+    @Test fun `explicit description type can override a point label`() {
+        val kml = """<kml><Placemark><name>WP01</name>
+            <description>Tipo: CP</description>
+            <Point><coordinates>-15,28</coordinates></Point></Placemark></kml>"""
+        val point = parser.read(RouteImportSource("route.kml", kml.toByteArray())).single()
+        assertEquals(RoutePointType.CHECKPOINT, point.type)
+    }
+
+    @Test fun `names need a recognized prefix boundary`() {
+        val kml = """<kml><Placemark><name>WPOINTED</name>
+            <Point><coordinates>-15,28</coordinates></Point></Placemark></kml>"""
+        val point = parser.read(RouteImportSource("route.kml", kml.toByteArray())).single()
+        assertEquals(RoutePointType.OTHER, point.type)
     }
 
     @Test fun `KMZ extracts its embedded KML`() {

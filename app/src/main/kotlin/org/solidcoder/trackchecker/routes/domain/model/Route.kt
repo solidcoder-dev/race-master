@@ -4,6 +4,9 @@ import org.solidcoder.trackchecker.routes.domain.services.RouteValidator
 
 enum class RouteStatus { DRAFT, READY }
 
+/** A validation report and the resulting ready aggregate, when valid. */
+data class RouteReadiness(val validation: RouteValidation, val readyRoute: Route?)
+
 /**
  * Aggregate root. Edits preserve point IDs and leave the route ready for revalidation.
  * No parsing, Android, or database implementation belongs here.
@@ -51,10 +54,15 @@ class Route private constructor(
     fun changePointType(pointId: RoutePointId, newType: RoutePointType): Route =
         editPoint(pointId) { it.changeType(newType) }
 
-    fun markReady(): Route {
-        require(RouteValidator().validate(this).canBeReady) { "A route with blocking issues cannot be ready" }
-        return Route(id, name, points, RouteStatus.READY, importedAtEpochMs)
+    fun assessReadiness(validator: RouteValidator = RouteValidator()): RouteReadiness {
+        val validation = validator.validate(this)
+        val ready = if (validation.canBeReady)
+            Route(id, name, points, RouteStatus.READY, importedAtEpochMs) else null
+        return RouteReadiness(validation, ready)
     }
+
+    fun markReady(): Route = assessReadiness().readyRoute
+        ?: throw IllegalArgumentException("A route with blocking issues cannot be ready")
 
     private fun editPoint(pointId: RoutePointId, edit: (RoutePoint) -> RoutePoint): Route {
         require(points.any { it.id == pointId }) { "Point does not belong to this route" }

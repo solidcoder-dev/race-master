@@ -12,6 +12,7 @@ import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
 @Composable
 fun PointEditorSheet(
     point: RoutePoint,
+    suggestedName: String?,
     onDismiss: () -> Unit,
     onSave: (String, RoutePointType) -> Unit
 ) {
@@ -33,6 +34,11 @@ fun PointEditorSheet(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
+            if (suggestedName != null && name == point.name) {
+                TextButton(onClick = { name = suggestedName }) {
+                    Text("Usar nombre disponible: $suggestedName")
+                }
+            }
             Box {
                 OutlinedButton(onClick = { menuExpanded = true }) {
                     Text("Tipo: ${type.displayName()}  ▾")
@@ -40,7 +46,12 @@ fun PointEditorSheet(
                 DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
                     RoutePointType.entries.forEach { candidate ->
                         DropdownMenuItem(
-                            text = { Text(candidate.displayName()) },
+                            text = {
+                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                    PointTypeDot(candidate)
+                                    Text(candidate.displayName())
+                                }
+                            },
                             onClick = {
                                 type = candidate
                                 menuExpanded = false
