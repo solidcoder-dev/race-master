@@ -6,6 +6,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import org.solidcoder.trackchecker.routes.domain.model.RoutePoint
 import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
@@ -19,6 +21,7 @@ fun PointEditorSheet(
     point: RoutePoint,
     suggestedName: String?,
     defaultRadius: DetectionRadius,
+    defaultScore: Int?,
     onDismiss: () -> Unit,
     onSave: (String, RoutePointType, PointChanges?) -> Unit
 ) {
@@ -26,7 +29,9 @@ fun PointEditorSheet(
     var type by remember(point.id, point.type) { mutableStateOf(point.type) }
     var menuExpanded by remember { mutableStateOf(false) }
     var customScore by remember(point.id, point.scoreValueOverride) { mutableStateOf(point.scoreValueOverride != null) }
-    var scoreText by remember(point.id, point.scoreValueOverride) { mutableStateOf(point.scoreValueOverride?.toString() ?: "10") }
+    var scoreText by remember(point.id, point.scoreValueOverride, defaultScore) {
+        mutableStateOf((point.scoreValueOverride ?: defaultScore ?: 10).toString())
+    }
     var customRadius by remember(point.id, point.detectionRadiusOverride) { mutableStateOf(point.detectionRadiusOverride != null) }
     var radiusText by remember(point.id, point.detectionRadiusOverride) {
         mutableStateOf((point.detectionRadiusOverride ?: defaultRadius).meters.formatMeters())
@@ -86,6 +91,7 @@ fun PointEditorSheet(
                     onValueChange = { scoreText = it },
                     label = { Text("Puntos") },
                     isError = !scoreValid,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -104,6 +110,7 @@ fun PointEditorSheet(
                     onValueChange = { radiusText = it },
                     label = { Text("Radio en metros") },
                     isError = !radiusValid,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
