@@ -15,7 +15,9 @@ import org.xmlpull.v1.XmlPullParser
  * Imports route points only. Track geometries are intentionally ignored.
  * Parsing of source XML happens behind the application port, never in domain.
  */
-class XmlRouteSourceParser : RouteSourceReader {
+class XmlRouteSourceParser(
+    private val createParser: () -> XmlPullParser = { Xml.newPullParser() }
+) : RouteSourceReader {
     override fun read(source: RouteImportSource): List<ImportedPoint> {
         val fileName = source.fileName
         val content = source.content
@@ -26,7 +28,7 @@ class XmlRouteSourceParser : RouteSourceReader {
             "kmz" -> unzipKml(content)
             else -> throw IllegalArgumentException("Formato no admitido: .$extension")
         }
-        val parser = Xml.newPullParser().apply {
+        val parser = createParser().apply {
             setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
             // Android's pull parser ignores DTD declarations unless processing is enabled.
             setFeature(XmlPullParser.FEATURE_PROCESS_DOCDECL, false)

@@ -11,9 +11,10 @@ import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
 import org.solidcoder.trackchecker.routes.application.ports.RouteImportSource
 import org.solidcoder.trackchecker.routes.application.ports.RouteSourceReader
 import org.solidcoder.trackchecker.routes.infrastructure.importers.XmlRouteSourceParser
+import org.kxml2.io.KXmlParser
 
 class XmlRouteSourceParserTest {
-    private val parser: RouteSourceReader = XmlRouteSourceParser()
+    private val parser: RouteSourceReader = XmlRouteSourceParser { KXmlParser() }
 
     @Test fun `real Nomad KML contains 63 points including distinct duplicate WP04 labels`() {
         val source = checkNotNull(javaClass.classLoader?.getResourceAsStream("ET 1 WP NOMAD 2024.kml"))
