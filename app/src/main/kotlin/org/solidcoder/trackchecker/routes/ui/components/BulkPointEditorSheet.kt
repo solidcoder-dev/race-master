@@ -8,6 +8,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import org.solidcoder.trackchecker.routes.domain.model.*
 
 private enum class BulkEditMode(val label: String) {
@@ -64,7 +66,9 @@ fun BulkPointEditorSheet(
                     value = scoreText,
                     onValueChange = { scoreText = it },
                     label = { Text("Valor en puntos") },
-                    isError = !scoreValid, singleLine = true, modifier = Modifier.fillMaxWidth()
+                    isError = !scoreValid, singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             HorizontalDivider()
@@ -75,7 +79,9 @@ fun BulkPointEditorSheet(
                     value = radiusText,
                     onValueChange = { radiusText = it },
                     label = { Text("Radio en metros") },
-                    isError = !radiusValid, singleLine = true, modifier = Modifier.fillMaxWidth()
+                    isError = !radiusValid, singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {

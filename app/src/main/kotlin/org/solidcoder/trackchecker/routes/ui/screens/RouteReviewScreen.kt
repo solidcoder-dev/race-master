@@ -223,6 +223,11 @@ fun RouteReviewScreen(
 
     selectedPoint?.let { point ->
         PointEditorSheet(point = point, defaultRadius = route.defaultDetectionRadius,
+            defaultScore = when (point.type) {
+                RoutePointType.WAYPOINT -> route.scoringFor(point.id)?.whenPassed
+                RoutePointType.CHECKPOINT -> route.scoringFor(point.id)?.whenMissed?.let { -it }
+                else -> null
+            },
             suggestedName = PointNameSuggestions.forPoint(route.points, point.id),
             onDismiss = { editingPointId = null },
             onSave = { name, type, changes ->
