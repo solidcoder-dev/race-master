@@ -26,7 +26,7 @@ class TrackEvaluatorTest {
     }
 
     @Test fun `checkpoint is missed when the recorded route bypasses its radius`() {
-        val track = Track(TrackId("bypass"), "bypass", listOf(TrackSegment(listOf(
+        val track = Track(TrackId("bypass"), route.id, "bypass", listOf(TrackSegment(listOf(
             GpsSample(28.0, -15.0),
             GpsSample(28.001, -15.0),
             GpsSample(28.001, -15.01),
@@ -61,7 +61,7 @@ class TrackEvaluatorTest {
     private fun point(id: String, latitude: Double, type: RoutePointType) =
         RoutePoint(RoutePointId(id), id, Coordinates(latitude, -15.0), type)
 
-    private fun track(vararg latitudes: Double) = Track(TrackId("t"), "t", listOf(
+    private fun track(vararg latitudes: Double) = Track(TrackId("t"), route.id, "t", listOf(
         TrackSegment(latitudes.map { GpsSample(it, -15.0) })
     ))
 }

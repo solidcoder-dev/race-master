@@ -50,10 +50,26 @@ class EvaluateTrackUseCaseTest {
         assertFalse(result.isOutdatedFor(route.rename("New display name")))
     }
 
+    @Test fun `a track cannot be evaluated for a different route`() = runBlocking {
+        val tracks = MemoryTracks()
+        val evaluations = MemoryEvaluations()
+        val foreign = Track(
+            TrackId("foreign"), RouteId("another-route"), "GPS",
+            listOf(TrackSegment(listOf(GpsSample(28.0, -15.0))))
+        )
+        tracks.save(foreign)
+        val action = EvaluateTrackUseCase(MemoryRoutes(route), tracks, evaluations)
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { action(route.id, foreign.id) }
+        }
+        assertTrue(evaluations.listForRoute(route.id).isEmpty())
+    }
+
     private fun point(id: String, lat: Double, type: RoutePointType) =
         RoutePoint(RoutePointId(id), id, Coordinates(lat, -15.0), type)
 
-    private fun track(id: String, samples: List<GpsSample>) = Track(TrackId(id), id,
+    private fun track(id: String, samples: List<GpsSample>) = Track(TrackId(id), route.id, id,
         listOf(TrackSegment(samples)))
 
     private class MemoryRoutes(private val route: Route) : RouteRepository {

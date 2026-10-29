@@ -32,6 +32,7 @@ class EvaluateTrackUseCase(
             "Valida la ruta antes de evaluar tracks"
         }
         val track = tracks.findById(trackId) ?: error("Track no encontrado")
+        require(track.routeId == routeId) { "El track no pertenece a esta ruta" }
         val fingerprint = route.evaluationFingerprint()
         val report = withContext(calculationDispatcher) { evaluator.evaluate(route, track) }
         val score = calculator.calculate(route, report)
