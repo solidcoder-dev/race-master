@@ -9,9 +9,13 @@ data class RoutePoint(
     val name: String,
     val coordinates: Coordinates,
     val type: RoutePointType,
-    val detectionRadiusOverride: DetectionRadius? = null
+    val detectionRadiusOverride: DetectionRadius? = null,
+    val scoreValueOverride: Int? = null
 ) {
-    init { require(name.isNotBlank()) { "Point name cannot be blank" } }
+    init {
+        require(name.isNotBlank()) { "Point name cannot be blank" }
+        require(scoreValueOverride == null || scoreValueOverride >= 0) { "Score must be non-negative" }
+    }
 
     fun rename(newName: String): RoutePoint {
         require(newName.isNotBlank()) { "Point name cannot be blank" }
@@ -22,4 +26,6 @@ data class RoutePoint(
 
     fun withDetectionRadiusOverride(radius: DetectionRadius?): RoutePoint =
         copy(detectionRadiusOverride = radius)
+
+    fun withScoreValueOverride(value: Int?): RoutePoint = copy(scoreValueOverride = value)
 }

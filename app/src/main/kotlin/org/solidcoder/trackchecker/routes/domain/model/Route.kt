@@ -17,7 +17,8 @@ class Route private constructor(
     points: List<RoutePoint>,
     val status: RouteStatus,
     val importedAtEpochMs: Long,
-    val defaultDetectionRadius: DetectionRadius
+    val defaultDetectionRadius: DetectionRadius,
+    val scoringPattern: ScoringPattern?
 ) {
     val points: List<RoutePoint> = points.toList()
 
@@ -33,8 +34,9 @@ class Route private constructor(
             name: String,
             points: List<RoutePoint>,
             importedAtEpochMs: Long,
-            defaultDetectionRadius: DetectionRadius = DetectionRadius.DEFAULT
-        ): Route = Route(id, name.trim(), points, RouteStatus.DRAFT, importedAtEpochMs, defaultDetectionRadius)
+            defaultDetectionRadius: DetectionRadius = DetectionRadius.DEFAULT,
+            scoringPattern: ScoringPattern? = null
+        ): Route = Route(id, name.trim(), points, RouteStatus.DRAFT, importedAtEpochMs, defaultDetectionRadius, scoringPattern)
 
         fun restore(
             id: RouteId,
@@ -42,13 +44,14 @@ class Route private constructor(
             points: List<RoutePoint>,
             status: RouteStatus,
             importedAtEpochMs: Long,
-            defaultDetectionRadius: DetectionRadius = DetectionRadius.DEFAULT
-        ): Route = Route(id, name, points, status, importedAtEpochMs, defaultDetectionRadius)
+            defaultDetectionRadius: DetectionRadius = DetectionRadius.DEFAULT,
+            scoringPattern: ScoringPattern? = null
+        ): Route = Route(id, name, points, status, importedAtEpochMs, defaultDetectionRadius, scoringPattern)
     }
 
     fun rename(newName: String): Route {
         require(newName.isNotBlank()) { "Route name cannot be blank" }
-        return Route(id, newName.trim(), points, status, importedAtEpochMs, defaultDetectionRadius)
+        return Route(id, newName.trim(), points, status, importedAtEpochMs, defaultDetectionRadius, scoringPattern)
     }
 
     fun detectionRadiusFor(pointId: RoutePointId): DetectionRadius {
@@ -58,7 +61,13 @@ class Route private constructor(
     }
 
     fun changeDefaultDetectionRadius(radius: DetectionRadius): Route =
-        Route(id, name, points, RouteStatus.DRAFT, importedAtEpochMs, radius)
+        Route(id, name, points, RouteStatus.DRAFT, importedAtEpochMs, radius, scoringPattern)
+
+    fun scoringFor(pointId: RoutePointId): PointScoreEffect? {
+        val point = points.firstOrNull { it.id == pointId }
+            ?: throw IllegalArgumentException("Point does not belong to this route")
+        return scoringPattern?.effectFor(point.type, point.scoreValueOverride)
+    }
 
     fun renamePoint(pointId: RoutePointId, newName: String): Route =
         editPoint(pointId) { it.rename(newName) }
@@ -72,7 +81,7 @@ class Route private constructor(
     fun assessReadiness(validator: RouteValidator = RouteValidator()): RouteReadiness {
         val validation = validator.validate(this)
         val ready = if (validation.canBeReady)
-            Route(id, name, points, RouteStatus.READY, importedAtEpochMs, defaultDetectionRadius) else null
+            Route(id, name, points, RouteStatus.READY, importedAtEpochMs, defaultDetectionRadius, scoringPattern) else null
         return RouteReadiness(validation, ready)
     }
 
@@ -86,7 +95,8 @@ class Route private constructor(
             points.map { if (it.id == pointId) edit(it) else it },
             RouteStatus.DRAFT,
             importedAtEpochMs,
-            defaultDetectionRadius
+            defaultDetectionRadius,
+            scoringPattern
         )
     }
 }
