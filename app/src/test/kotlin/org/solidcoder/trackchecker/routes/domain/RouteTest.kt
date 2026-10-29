@@ -43,6 +43,24 @@ class RouteTest {
         }
     }
 
+    @Test fun `mixed scoring distinguishes passed waypoints and missed checkpoints`() {
+        val configured = Route.imported(
+            RouteId("scored"), "Etapa", listOf(start, waypoint, checkpoint, finish), 100L,
+            scoringPattern = ScoringPattern.MIXED
+        )
+        assertEquals(PointScoreEffect(whenPassed = 10), configured.scoringFor(waypoint.id))
+        assertEquals(PointScoreEffect(whenMissed = -20), configured.scoringFor(checkpoint.id))
+        assertNull(configured.scoringFor(start.id))
+        assertNull(configured.scoringFor(finish.id))
+    }
+
+    @Test fun `a point override changes magnitude but retains its type scoring behavior`() {
+        val overridden = checkpoint.withScoreValueOverride(35)
+        assertEquals(PointScoreEffect(whenMissed = -35),
+            ScoringPattern.PASSED_POINTS.effectFor(overridden.type, overridden.scoreValueOverride))
+        assertThrows(IllegalArgumentException::class.java) { waypoint.withScoreValueOverride(-1) }
+    }
+
     @Test fun `renaming a point preserves its identity and the original route`() {
         val original = route()
         val renamed = original.renamePoint(waypoint.id, "Barranco")
