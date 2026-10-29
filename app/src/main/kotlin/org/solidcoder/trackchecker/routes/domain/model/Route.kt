@@ -16,7 +16,8 @@ class Route private constructor(
     val name: String,
     points: List<RoutePoint>,
     val status: RouteStatus,
-    val importedAtEpochMs: Long
+    val importedAtEpochMs: Long,
+    val defaultDetectionRadius: DetectionRadius
 ) {
     val points: List<RoutePoint> = points.toList()
 
@@ -31,22 +32,33 @@ class Route private constructor(
             id: RouteId,
             name: String,
             points: List<RoutePoint>,
-            importedAtEpochMs: Long
-        ): Route = Route(id, name.trim(), points, RouteStatus.DRAFT, importedAtEpochMs)
+            importedAtEpochMs: Long,
+            defaultDetectionRadius: DetectionRadius = DetectionRadius.DEFAULT
+        ): Route = Route(id, name.trim(), points, RouteStatus.DRAFT, importedAtEpochMs, defaultDetectionRadius)
 
         fun restore(
             id: RouteId,
             name: String,
             points: List<RoutePoint>,
             status: RouteStatus,
-            importedAtEpochMs: Long
-        ): Route = Route(id, name, points, status, importedAtEpochMs)
+            importedAtEpochMs: Long,
+            defaultDetectionRadius: DetectionRadius = DetectionRadius.DEFAULT
+        ): Route = Route(id, name, points, status, importedAtEpochMs, defaultDetectionRadius)
     }
 
     fun rename(newName: String): Route {
         require(newName.isNotBlank()) { "Route name cannot be blank" }
-        return Route(id, newName.trim(), points, status, importedAtEpochMs)
+        return Route(id, newName.trim(), points, status, importedAtEpochMs, defaultDetectionRadius)
     }
+
+    fun detectionRadiusFor(pointId: RoutePointId): DetectionRadius {
+        val point = points.firstOrNull { it.id == pointId }
+            ?: throw IllegalArgumentException("Point does not belong to this route")
+        return point.detectionRadiusOverride ?: defaultDetectionRadius
+    }
+
+    fun changeDefaultDetectionRadius(radius: DetectionRadius): Route =
+        Route(id, name, points, RouteStatus.DRAFT, importedAtEpochMs, radius)
 
     fun renamePoint(pointId: RoutePointId, newName: String): Route =
         editPoint(pointId) { it.rename(newName) }
@@ -57,7 +69,7 @@ class Route private constructor(
     fun assessReadiness(validator: RouteValidator = RouteValidator()): RouteReadiness {
         val validation = validator.validate(this)
         val ready = if (validation.canBeReady)
-            Route(id, name, points, RouteStatus.READY, importedAtEpochMs) else null
+            Route(id, name, points, RouteStatus.READY, importedAtEpochMs, defaultDetectionRadius) else null
         return RouteReadiness(validation, ready)
     }
 
@@ -70,7 +82,8 @@ class Route private constructor(
             id, name,
             points.map { if (it.id == pointId) edit(it) else it },
             RouteStatus.DRAFT,
-            importedAtEpochMs
+            importedAtEpochMs,
+            defaultDetectionRadius
         )
     }
 }

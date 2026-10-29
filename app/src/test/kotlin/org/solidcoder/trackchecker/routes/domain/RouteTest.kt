@@ -18,6 +18,22 @@ class RouteTest {
         assertNotEquals(route().points[1].id, route().points[2].id)
     }
 
+    @Test fun `route points inherit the default detection radius`() {
+        assertEquals(50.0, route().detectionRadiusFor(waypoint.id).meters, 0.0)
+    }
+
+    @Test fun `changing the route radius updates inherited values`() {
+        val updated = route().changeDefaultDetectionRadius(DetectionRadius(80.0))
+        assertEquals(80.0, updated.detectionRadiusFor(waypoint.id).meters, 0.0)
+        assertEquals(50.0, route().detectionRadiusFor(waypoint.id).meters, 0.0)
+    }
+
+    @Test fun `invalid detection radii are rejected`() {
+        listOf(0.0, -10.0, Double.NaN, Double.POSITIVE_INFINITY).forEach { value ->
+            assertThrows(IllegalArgumentException::class.java) { DetectionRadius(value) }
+        }
+    }
+
     @Test fun `renaming a point preserves its identity and the original route`() {
         val original = route()
         val renamed = original.renamePoint(waypoint.id, "Barranco")
