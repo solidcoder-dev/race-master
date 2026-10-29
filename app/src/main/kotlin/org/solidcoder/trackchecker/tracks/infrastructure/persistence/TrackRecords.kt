@@ -6,10 +6,19 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import org.solidcoder.trackchecker.routes.infrastructure.persistence.RouteRecord
 
-@Entity(tableName = "tracks")
+@Entity(
+    tableName = "tracks",
+    foreignKeys = [ForeignKey(
+        entity = RouteRecord::class, parentColumns = ["id"], childColumns = ["routeId"],
+        onDelete = ForeignKey.CASCADE
+    )],
+    indices = [Index("routeId")]
+)
 data class TrackRecord(
     @PrimaryKey val id: String,
+    val routeId: String,
     val name: String,
     val importedAtEpochMs: Long
 )

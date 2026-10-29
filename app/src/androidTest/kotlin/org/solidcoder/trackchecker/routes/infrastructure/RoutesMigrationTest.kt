@@ -59,7 +59,7 @@ class RoutesMigrationTest {
                 assertEquals("Etapa", cursor.getString(0))
                 assertEquals("READY", cursor.getString(1))
             }
-            database.execSQL("INSERT INTO tracks (id, name, importedAtEpochMs) VALUES ('track', 'GPS', 101)")
+            database.execSQL("INSERT INTO tracks (id, routeId, name, importedAtEpochMs) VALUES ('track', 'route', 'GPS', 101)")
             database.execSQL("INSERT INTO track_samples (trackId, segmentIndex, sampleIndex, latitude, longitude) VALUES ('track', 0, 0, 28.0, -15.0)")
         }
     }

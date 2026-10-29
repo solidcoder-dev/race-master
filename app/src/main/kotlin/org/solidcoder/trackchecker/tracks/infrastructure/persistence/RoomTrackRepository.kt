@@ -1,6 +1,7 @@
 package org.solidcoder.trackchecker.tracks.infrastructure.persistence
 
 import androidx.room.withTransaction
+import org.solidcoder.trackchecker.routes.domain.model.RouteId
 import org.solidcoder.trackchecker.routes.infrastructure.persistence.RoutesDatabase
 import org.solidcoder.trackchecker.tracks.domain.model.GpsSample
 import org.solidcoder.trackchecker.tracks.domain.model.Track
@@ -15,7 +16,7 @@ class RoomTrackRepository(private val database: RoutesDatabase) : TrackRepositor
 
     override suspend fun save(track: Track) {
         database.withTransaction {
-            dao.upsert(TrackRecord(track.id.value, track.name, track.importedAtEpochMs))
+            dao.upsert(TrackRecord(track.id.value, track.routeId.value, track.name, track.importedAtEpochMs))
             dao.deleteSamples(track.id.value)
             dao.insertSamples(track.segments.flatMapIndexed { segmentIndex, segment ->
                 segment.samples.mapIndexed { sampleIndex, sample ->
@@ -30,6 +31,7 @@ class RoomTrackRepository(private val database: RoutesDatabase) : TrackRepositor
 
     private fun TrackWithSamples.toDomain(): Track = Track(
         id = TrackId(track.id),
+        routeId = RouteId(track.routeId),
         name = track.name,
         importedAtEpochMs = track.importedAtEpochMs,
         segments = samples.groupBy { it.segmentIndex }.toSortedMap().values.map { records ->

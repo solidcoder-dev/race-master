@@ -1,6 +1,7 @@
 package org.solidcoder.trackchecker.tracks.domain.model
 
 import java.util.UUID
+import org.solidcoder.trackchecker.routes.domain.model.RouteId
 
 @JvmInline
 value class TrackId(val value: String) {
@@ -26,6 +27,7 @@ data class TrackSegment(val samples: List<GpsSample>) {
 /** A recorded path. Segment and sample order is preserved exactly as imported. */
 class Track(
     val id: TrackId,
+    val routeId: RouteId,
     val name: String,
     segments: List<TrackSegment>,
     val importedAtEpochMs: Long = 0L

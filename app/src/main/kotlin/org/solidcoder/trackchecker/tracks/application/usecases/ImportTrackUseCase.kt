@@ -30,6 +30,7 @@ class ImportTrackUseCase(
         requireReady(routeId)
         val track = Track(
             id = newId(),
+            routeId = routeId,
             name = source.fileName.substringBeforeLast('.').trim().ifBlank { "Nuevo track" },
             segments = segments,
             importedAtEpochMs = clock()

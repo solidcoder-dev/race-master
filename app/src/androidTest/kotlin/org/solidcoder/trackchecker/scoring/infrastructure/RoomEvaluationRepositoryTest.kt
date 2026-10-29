@@ -41,7 +41,7 @@ class RoomEvaluationRepositoryTest {
         val repository = RoomEvaluationRepository(database)
         for (index in 1..2) {
             val id = TrackId("track$index")
-            tracks.save(Track(id, "Track $index", listOf(TrackSegment(listOf(GpsSample(28.0, -15.0))))))
+            tracks.save(Track(id, route.id, "Track $index", listOf(TrackSegment(listOf(GpsSample(28.0, -15.0))))))
             val points = route.points.map { point ->
                 PointPassage(point.id, PassageStatus.PASSED, 0.0, 50.0)
             }

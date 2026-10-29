@@ -12,6 +12,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.solidcoder.trackchecker.routes.infrastructure.persistence.RoutesDatabase
+import org.solidcoder.trackchecker.routes.infrastructure.persistence.RoomRouteRepository
+import org.solidcoder.trackchecker.routes.domain.model.*
 import org.solidcoder.trackchecker.tracks.domain.model.GpsSample
 import org.solidcoder.trackchecker.tracks.domain.model.Track
 import org.solidcoder.trackchecker.tracks.domain.model.TrackId
@@ -28,16 +30,22 @@ class RoomTrackRepositoryTest {
             ApplicationProvider.getApplicationContext(), RoutesDatabase::class.java
         ).build()
         repository = RoomTrackRepository(db)
+        runBlocking {
+            RoomRouteRepository(db).save(Route.imported(RouteId("route"), "Route", listOf(
+                RoutePoint(RoutePointId("start"), "Start", Coordinates(28.0, -15.0), RoutePointType.START),
+                RoutePoint(RoutePointId("finish"), "Finish", Coordinates(28.01, -15.01), RoutePointType.FINISH)
+            ), 0L))
+        }
     }
 
     @After fun tearDown() = db.close()
 
     @Test fun tracksWithEqualNamesRemainIndependentAndOrdered() = runBlocking {
-        val first = Track(TrackId("a"), "participant.kml", listOf(
+        val first = Track(TrackId("a"), RouteId("route"), "participant.kml", listOf(
             TrackSegment(listOf(GpsSample(28.0, -15.0), GpsSample(28.1, -15.1))),
             TrackSegment(listOf(GpsSample(28.2, -15.2)))
         ))
-        val second = Track(TrackId("b"), "participant.kml", listOf(
+        val second = Track(TrackId("b"), RouteId("route"), "participant.kml", listOf(
             TrackSegment(listOf(GpsSample(29.0, -16.0)))
         ))
 
@@ -50,5 +58,8 @@ class RoomTrackRepositoryTest {
         repository.delete(first.id)
         assertNull(repository.findById(first.id))
         assertNotNull(repository.findById(second.id))
+
+        RoomRouteRepository(db).delete(RouteId("route"))
+        assertNull(repository.findById(second.id))
     }
 }
