@@ -19,4 +19,7 @@ data class RoutePoint(
     }
 
     fun changeType(newType: RoutePointType): RoutePoint = copy(type = newType)
+
+    fun withDetectionRadiusOverride(radius: DetectionRadius?): RoutePoint =
+        copy(detectionRadiusOverride = radius)
 }

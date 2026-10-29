@@ -28,6 +28,15 @@ class RouteTest {
         assertEquals(50.0, route().detectionRadiusFor(waypoint.id).meters, 0.0)
     }
 
+    @Test fun `point override survives route changes and can be reset to inheritance`() {
+        val customized = route().overridePointDetectionRadius(waypoint.id, DetectionRadius(100.0))
+        val resized = customized.changeDefaultDetectionRadius(DetectionRadius(75.0))
+        assertEquals(100.0, resized.detectionRadiusFor(waypoint.id).meters, 0.0)
+        assertEquals(75.0, resized.detectionRadiusFor(duplicate.id).meters, 0.0)
+        val reset = resized.overridePointDetectionRadius(waypoint.id, null)
+        assertEquals(75.0, reset.detectionRadiusFor(waypoint.id).meters, 0.0)
+    }
+
     @Test fun `invalid detection radii are rejected`() {
         listOf(0.0, -10.0, Double.NaN, Double.POSITIVE_INFINITY).forEach { value ->
             assertThrows(IllegalArgumentException::class.java) { DetectionRadius(value) }

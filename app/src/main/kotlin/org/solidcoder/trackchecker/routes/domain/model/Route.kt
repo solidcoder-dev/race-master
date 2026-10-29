@@ -66,6 +66,9 @@ class Route private constructor(
     fun changePointType(pointId: RoutePointId, newType: RoutePointType): Route =
         editPoint(pointId) { it.changeType(newType) }
 
+    fun overridePointDetectionRadius(pointId: RoutePointId, radius: DetectionRadius?): Route =
+        editPoint(pointId) { it.withDetectionRadiusOverride(radius) }
+
     fun assessReadiness(validator: RouteValidator = RouteValidator()): RouteReadiness {
         val validation = validator.validate(this)
         val ready = if (validation.canBeReady)
