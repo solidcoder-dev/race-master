@@ -42,3 +42,10 @@ class Track(
     val firstSample: GpsSample get() = segments.first().samples.first()
     val lastSample: GpsSample get() = segments.last().samples.last()
 }
+
+data class TrackSummary(
+    val id: TrackId,
+    val routeId: RouteId,
+    val name: String,
+    val importedAtEpochMs: Long
+)

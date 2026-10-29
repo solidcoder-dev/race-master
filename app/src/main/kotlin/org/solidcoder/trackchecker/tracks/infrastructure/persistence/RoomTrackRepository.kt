@@ -7,12 +7,16 @@ import org.solidcoder.trackchecker.tracks.domain.model.GpsSample
 import org.solidcoder.trackchecker.tracks.domain.model.Track
 import org.solidcoder.trackchecker.tracks.domain.model.TrackId
 import org.solidcoder.trackchecker.tracks.domain.model.TrackSegment
+import org.solidcoder.trackchecker.tracks.domain.model.TrackSummary
 import org.solidcoder.trackchecker.tracks.domain.repositories.TrackRepository
 
 class RoomTrackRepository(private val database: RoutesDatabase) : TrackRepository {
     private val dao = database.tracks()
 
     override suspend fun findById(id: TrackId): Track? = dao.findById(id.value)?.toDomain()
+
+    override suspend fun listForRoute(routeId: RouteId): List<TrackSummary> =
+        dao.listForRoute(routeId.value).map { TrackSummary(TrackId(it.id), routeId, it.name, it.importedAtEpochMs) }
 
     override suspend fun save(track: Track) {
         database.withTransaction {

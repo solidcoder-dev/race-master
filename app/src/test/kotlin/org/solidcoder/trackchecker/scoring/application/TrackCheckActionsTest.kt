@@ -36,6 +36,9 @@ class TrackCheckActionsTest {
         val tracks = object : TrackRepository {
             val stored = mutableMapOf<TrackId, Track>()
             override suspend fun findById(id: TrackId) = stored[id]
+            override suspend fun listForRoute(routeId: RouteId) = stored.values
+                .filter { it.routeId == routeId }
+                .map { TrackSummary(it.id, it.routeId, it.name, it.importedAtEpochMs) }
             override suspend fun save(track: Track) { stored[track.id] = track }
             override suspend fun delete(id: TrackId) {
                 yield() // Suspended persistence must still complete after cancellation.
