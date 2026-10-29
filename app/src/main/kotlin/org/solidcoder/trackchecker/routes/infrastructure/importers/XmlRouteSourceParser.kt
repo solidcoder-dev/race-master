@@ -4,15 +4,13 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.util.Locale
 import java.util.zip.ZipInputStream
-import javax.xml.XMLConstants
-import javax.xml.parsers.DocumentBuilderFactory
+import android.util.Xml
 import org.solidcoder.trackchecker.routes.application.ports.ImportedPoint
 import org.solidcoder.trackchecker.routes.application.ports.RouteSourceReader
 import org.solidcoder.trackchecker.routes.application.ports.RouteImportSource
 import org.solidcoder.trackchecker.routes.domain.model.Coordinates
 import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
-import org.w3c.dom.Element
-import org.w3c.dom.Node
+import org.xmlpull.v1.XmlPullParser
 
 /**
  * Imports route points only. Track geometries are intentionally ignored.
@@ -29,53 +27,100 @@ class XmlRouteSourceParser : RouteSourceReader {
             "kmz" -> unzipKml(content)
             else -> throw IllegalArgumentException("Formato no admitido: .$extension")
         }
-        val factory = DocumentBuilderFactory.newInstance().apply {
-            isNamespaceAware = true
-            setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
-            setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
-            setFeature("http://xml.org/sax/features/external-general-entities", false)
-            setFeature("http://xml.org/sax/features/external-parameter-entities", false)
-            isXIncludeAware = false
-            isExpandEntityReferences = false
-            // Android's XMLConstants API omits these desktop Java fields.
-            // Keep DTD rejection mandatory; extra JAXP attributes are best effort.
-            runCatching { setAttribute("http://javax.xml.XMLConstants/property/accessExternalDTD", "") }
-            runCatching { setAttribute("http://javax.xml.XMLConstants/property/accessExternalSchema", "") }
+        val parser = Xml.newPullParser().apply {
+            setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
+            // Android's pull parser ignores DTD declarations unless processing is enabled.
+            setFeature(XmlPullParser.FEATURE_PROCESS_DOCDECL, false)
+            setInput(ByteArrayInputStream(bytes), null)
         }
-        val document = factory.newDocumentBuilder().parse(ByteArrayInputStream(bytes))
-        val root = document.documentElement?.localName?.lowercase(Locale.ROOT)
-        return when (root) {
-            "kml" -> parseKml(document.documentElement)
-            "gpx" -> parseGpx(document.documentElement)
+        parser.nextTag()
+        return when (parser.name.lowercase(Locale.ROOT)) {
+            "kml" -> parseKml(parser)
+            "gpx" -> parseGpx(parser)
             else -> throw IllegalArgumentException("El archivo no contiene un documento KML o GPX")
         }
     }
 
-    private fun parseKml(root: Element): List<ImportedPoint> =
-        root.getElementsByTagNameNS("*", "Placemark").asElements().mapNotNull { placemark ->
-            // Only a direct Point geometry belongs to an official route waypoint.
-            val point = placemark.directChild("Point") ?: return@mapNotNull null
-            val rawCoordinates = point.directChild("coordinates")?.textContent?.trim()
-                ?: throw IllegalArgumentException("Un punto KML no tiene coordenadas")
-            val components = rawCoordinates.split(Regex("[,\\s]+"))
-            require(components.size >= 2) { "Coordenadas KML incompletas" }
-            val longitude = components[0].toDoubleOrNull() ?: error("Longitud KML inválida")
-            val latitude = components[1].toDoubleOrNull() ?: error("Latitud KML inválida")
-            val name = placemark.directChild("name")?.textContent?.trim()
-            ImportedPoint(name, Coordinates(latitude, longitude), classify(name))
-        }
+    private fun parseKml(parser: XmlPullParser): List<ImportedPoint> {
+        val points = mutableListOf<ImportedPoint>()
+        var placemarkDepth = -1
+        var pointDepth = -1
+        var name: String? = null
+        var coordinates: String? = null
 
-    private fun parseGpx(root: Element): List<ImportedPoint> {
-        val candidates = root.getElementsByTagNameNS("*", "wpt").asElements() +
-            root.getElementsByTagNameNS("*", "rtept").asElements()
-        return candidates.map { element ->
-            val latitude = element.getAttribute("lat").toDoubleOrNull()
-                ?: error("Latitud GPX inválida")
-            val longitude = element.getAttribute("lon").toDoubleOrNull()
-                ?: error("Longitud GPX inválida")
-            val name = element.directChild("name")?.textContent?.trim()
-            ImportedPoint(name, Coordinates(latitude, longitude), classify(name))
+        while (parser.nextToken() != XmlPullParser.END_DOCUMENT) {
+            when (parser.eventType) {
+                XmlPullParser.DOCDECL -> throw IllegalArgumentException("El archivo XML contiene una declaración no permitida")
+                XmlPullParser.START_TAG -> when {
+                    parser.name == "Placemark" -> {
+                        placemarkDepth = parser.depth
+                        pointDepth = -1
+                        name = null
+                        coordinates = null
+                    }
+                    placemarkDepth > 0 && parser.depth == placemarkDepth + 1 && parser.name == "name" -> {
+                        name = parser.nextText().trim().takeIf { it.isNotEmpty() }
+                    }
+                    placemarkDepth > 0 && parser.depth == placemarkDepth + 1 && parser.name == "Point" -> {
+                        pointDepth = parser.depth
+                    }
+                    pointDepth > 0 && parser.depth == pointDepth + 1 && parser.name == "coordinates" -> {
+                        coordinates = parser.nextText().trim()
+                    }
+                }
+                XmlPullParser.END_TAG -> if (
+                    parser.name == "Placemark" && parser.depth == placemarkDepth
+                ) {
+                    // Only a direct Point geometry belongs to an official route waypoint.
+                    coordinates?.let { points += parseKmlPoint(name, it) }
+                    placemarkDepth = -1
+                    pointDepth = -1
+                }
+            }
         }
+        return points
+    }
+
+    private fun parseKmlPoint(name: String?, rawCoordinates: String): ImportedPoint {
+        val components = rawCoordinates.split(Regex("[,\\s]+"))
+        require(components.size >= 2) { "Coordenadas KML incompletas" }
+        val longitude = components[0].toDoubleOrNull() ?: error("Longitud KML inválida")
+        val latitude = components[1].toDoubleOrNull() ?: error("Latitud KML inválida")
+        return ImportedPoint(name, Coordinates(latitude, longitude), classify(name))
+    }
+
+    private fun parseGpx(parser: XmlPullParser): List<ImportedPoint> {
+        val points = mutableListOf<ImportedPoint>()
+        var pointDepth = -1
+        var latitude: Double? = null
+        var longitude: Double? = null
+        var name: String? = null
+
+        while (parser.nextToken() != XmlPullParser.END_DOCUMENT) {
+            when (parser.eventType) {
+                XmlPullParser.DOCDECL -> throw IllegalArgumentException("El archivo XML contiene una declaración no permitida")
+                XmlPullParser.START_TAG -> when {
+                    parser.name == "wpt" || parser.name == "rtept" -> {
+                        pointDepth = parser.depth
+                        latitude = parser.getAttributeValue(null, "lat")?.toDoubleOrNull()
+                        longitude = parser.getAttributeValue(null, "lon")?.toDoubleOrNull()
+                        name = null
+                    }
+                    pointDepth > 0 && parser.depth == pointDepth + 1 && parser.name == "name" -> {
+                        name = parser.nextText().trim().takeIf { it.isNotEmpty() }
+                    }
+                }
+                XmlPullParser.END_TAG -> if (
+                    (parser.name == "wpt" || parser.name == "rtept") && parser.depth == pointDepth
+                ) {
+                    val pointLatitude = latitude ?: error("Latitud GPX inválida")
+                    val pointLongitude = longitude ?: error("Longitud GPX inválida")
+                    points += ImportedPoint(name, Coordinates(pointLatitude, pointLongitude), classify(name))
+                    pointDepth = -1
+                }
+            }
+        }
+        return points
     }
 
     private fun classify(name: String?): RoutePointType {
@@ -112,14 +157,6 @@ class XmlRouteSourceParser : RouteSourceReader {
         }
         throw IllegalArgumentException("KMZ sin archivo KML")
     }
-
-    private fun Element.directChild(local: String): Element? =
-        (0 until childNodes.length).map { childNodes.item(it) }
-            .filterIsInstance<Element>()
-            .firstOrNull { it.localName == local || it.nodeName == local }
-
-    private fun org.w3c.dom.NodeList.asElements(): List<Element> =
-        (0 until length).mapNotNull { item(it) as? Element }
 
     private companion object { const val MAX_FILE_BYTES = 10 * 1024 * 1024 }
 }

@@ -16,6 +16,7 @@ import org.solidcoder.trackchecker.routes.domain.model.*
 import org.solidcoder.trackchecker.routes.application.ports.RouteImportSource
 import org.solidcoder.trackchecker.routes.application.usecases.EditRoutePointDetails
 import org.xml.sax.SAXException
+import org.xmlpull.v1.XmlPullParserException
 
 class RoutesViewModel(
     private val actions: RouteUseCases
@@ -132,9 +133,11 @@ class RoutesViewModel(
     }
 
     private fun errorMessage(error: Exception): String = when (error) {
-        is SAXException -> "No se pudo interpretar el archivo. Comprueba que sea un KML, GPX o KMZ válido."
+        is SAXException, is XmlPullParserException -> "No se pudo interpretar el archivo. Comprueba que sea un KML, GPX o KMZ válido."
         is SecurityException, is IOException -> "No se pudo acceder al archivo. Vuelve a seleccionarlo e inténtalo de nuevo."
-        else -> error.message?.takeIf { it.isNotBlank() } ?: "No se pudo completar la operación. Inténtalo de nuevo."
+        else -> error.message
+            ?.takeIf { it.isNotBlank() && !it.startsWith("http://") && !it.startsWith("https://") }
+            ?: "No se pudo completar la operación. Inténtalo de nuevo."
     }
 
     companion object {
