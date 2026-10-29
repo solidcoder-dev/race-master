@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 /** Reusable route summary; only local menu state lives inside the component. */
 @Composable
@@ -37,7 +38,9 @@ fun RouteCard(
                 color = if (isReady) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
             )
             Box {
-                TextButton(onClick = { menuExpanded = true }) { Text("⋮") }
+                TextButton(onClick = { menuExpanded = true }) {
+                    Text("⋮", fontSize = 28.sp, lineHeight = 32.sp)
+                }
                 DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
                     DropdownMenuItem(text = { Text("Renombrar") }, onClick = {
                         menuExpanded = false
