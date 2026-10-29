@@ -21,7 +21,23 @@ class TrackEvaluatorTest {
         assertTrue(report.validStart)
         assertTrue(report.validFinish)
         assertEquals(PassageStatus.PASSED, report.passages[1].status)
+        assertEquals(PassageStatus.UNCERTAIN, report.passages[2].status)
+        assertTrue(report.needsReview)
+    }
+
+    @Test fun `checkpoint is missed when the recorded route bypasses its radius`() {
+        val track = Track(TrackId("bypass"), "bypass", listOf(TrackSegment(listOf(
+            GpsSample(28.0, -15.0),
+            GpsSample(28.001, -15.0),
+            GpsSample(28.001, -15.01),
+            GpsSample(28.005, -15.01),
+            GpsSample(28.01, -15.01),
+            GpsSample(28.01, -15.0)
+        ))))
+
+        val report = TrackEvaluator().evaluate(route, track)
         assertEquals(PassageStatus.MISSED, report.passages[2].status)
+        assertFalse(report.needsReview)
     }
 
     @Test fun `a waypoint between recorded samples is reached within its radius`() {
