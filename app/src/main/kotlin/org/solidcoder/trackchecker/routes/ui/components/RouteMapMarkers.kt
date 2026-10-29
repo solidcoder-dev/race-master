@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package org.solidcoder.trackchecker.routes.ui.components
 
 import android.content.Context
