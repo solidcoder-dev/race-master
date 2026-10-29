@@ -22,6 +22,15 @@ class RouteTest {
         assertEquals(50.0, route().detectionRadiusFor(waypoint.id).meters, 0.0)
     }
 
+    @Test fun `evaluation fingerprint changes for scoring rules but not display names`() {
+        val original = route()
+        assertEquals(original.evaluationFingerprint(), original.rename("A different name").evaluationFingerprint())
+        assertEquals(original.evaluationFingerprint(), original.renamePoint(waypoint.id, "WP renamed").evaluationFingerprint())
+        assertNotEquals(original.evaluationFingerprint(), original.changeDefaultDetectionRadius(DetectionRadius(75.0)).evaluationFingerprint())
+        assertNotEquals(original.evaluationFingerprint(), original.applyScoringPattern(ScoringPattern.MIXED).evaluationFingerprint())
+        assertNotEquals(original.evaluationFingerprint(), original.changePointType(waypoint.id, RoutePointType.CHECKPOINT).evaluationFingerprint())
+    }
+
     @Test fun `changing the route radius updates inherited values`() {
         val updated = route().changeDefaultDetectionRadius(DetectionRadius(80.0))
         assertEquals(80.0, updated.detectionRadiusFor(waypoint.id).meters, 0.0)

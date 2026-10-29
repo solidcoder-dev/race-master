@@ -1,5 +1,6 @@
 package org.solidcoder.trackchecker.routes.domain.model
 
+import java.security.MessageDigest
 import org.solidcoder.trackchecker.routes.domain.services.RouteValidator
 
 enum class RouteStatus { DRAFT, READY }
@@ -67,6 +68,22 @@ class Route private constructor(
         val point = points.firstOrNull { it.id == pointId }
             ?: throw IllegalArgumentException("Point does not belong to this route")
         return scoringPattern?.effectFor(point.type, point.scoreValueOverride)
+    }
+
+    /** Stable identity of evaluation-relevant data; route and point names are excluded. */
+    fun evaluationFingerprint(): String {
+        val canonical = buildString {
+            append(defaultDetectionRadius.meters).append('|').append(scoringPattern?.name ?: "none")
+            points.sortedBy { it.id.value }.forEach { point ->
+                append('\n').append(point.id.value).append('|')
+                append(point.coordinates.latitude).append('|').append(point.coordinates.longitude).append('|')
+                append(point.type.name).append('|')
+                append(point.detectionRadiusOverride?.meters ?: "inherit").append('|')
+                append(point.scoreValueOverride ?: "inherit")
+            }
+        }
+        return MessageDigest.getInstance("SHA-256").digest(canonical.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it.toInt() and 0xff) }
     }
 
     fun overridePointScore(pointId: RoutePointId, value: Int?): Route =
