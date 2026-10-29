@@ -11,6 +11,12 @@ import org.solidcoder.trackchecker.routes.infrastructure.persistence.RoutesDatab
 import org.solidcoder.trackchecker.routes.infrastructure.persistence.MIGRATION_1_2
 import org.solidcoder.trackchecker.routes.infrastructure.persistence.MIGRATION_2_3
 import org.solidcoder.trackchecker.routes.infrastructure.persistence.MIGRATION_3_4
+import org.solidcoder.trackchecker.scoring.application.usecases.EvaluateTrackUseCase
+import org.solidcoder.trackchecker.scoring.application.usecases.TrackCheckActions
+import org.solidcoder.trackchecker.scoring.infrastructure.persistence.RoomEvaluationRepository
+import org.solidcoder.trackchecker.tracks.application.usecases.ImportTrackUseCase
+import org.solidcoder.trackchecker.tracks.infrastructure.importers.XmlTrackSourceParser
+import org.solidcoder.trackchecker.tracks.infrastructure.persistence.RoomTrackRepository
 
 /** Single-process composition root; the domain has no Android or Room dependencies. */
 class RoutesContainer(context: Context) {
@@ -27,5 +33,14 @@ class RoutesContainer(context: Context) {
         repository = repository,
         catalog = repository,
         reader = XmlRouteSourceParser()
+    )
+
+    private val tracks = RoomTrackRepository(database)
+    private val evaluations = RoomEvaluationRepository(database)
+    val trackChecks = TrackCheckActions(
+        importTrack = ImportTrackUseCase(repository, tracks, XmlTrackSourceParser()),
+        evaluate = EvaluateTrackUseCase(repository, tracks, evaluations),
+        tracks = tracks,
+        evaluations = evaluations
     )
 }
