@@ -69,6 +69,14 @@ class Route private constructor(
         return scoringPattern?.effectFor(point.type, point.scoreValueOverride)
     }
 
+    fun overridePointScore(pointId: RoutePointId, value: Int?): Route =
+        editPoint(pointId) { it.withScoreValueOverride(value) }
+
+    fun applyScoringPattern(pattern: ScoringPattern, replaceOverrides: Boolean = false): Route {
+        val updatedPoints = if (replaceOverrides) points.map { it.withScoreValueOverride(null) } else points
+        return Route(id, name, updatedPoints, RouteStatus.DRAFT, importedAtEpochMs, defaultDetectionRadius, pattern)
+    }
+
     fun renamePoint(pointId: RoutePointId, newName: String): Route =
         editPoint(pointId) { it.rename(newName) }
 
