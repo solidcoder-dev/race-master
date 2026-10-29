@@ -46,7 +46,12 @@ fun PointEditorSheet(
                 DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
                     RoutePointType.entries.forEach { candidate ->
                         DropdownMenuItem(
-                            text = { Text(candidate.displayName()) },
+                            text = {
+                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                    PointTypeDot(candidate)
+                                    Text(candidate.displayName())
+                                }
+                            },
                             onClick = {
                                 type = candidate
                                 menuExpanded = false

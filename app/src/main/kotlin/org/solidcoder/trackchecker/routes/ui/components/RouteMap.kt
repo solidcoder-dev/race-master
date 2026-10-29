@@ -6,11 +6,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Typeface
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.maplibre.android.MapLibre
 import org.maplibre.android.annotations.MarkerOptions
+import org.maplibre.android.annotations.IconFactory
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLngBounds
@@ -19,6 +24,7 @@ import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.solidcoder.trackchecker.routes.domain.model.Route
 import org.solidcoder.trackchecker.routes.domain.model.RoutePointId
+import org.solidcoder.trackchecker.routes.domain.model.RoutePointType
 
 /**
  * A native MapLibre map hosted inside Compose. Marker snippets carry stable IDs,
@@ -86,11 +92,15 @@ fun RouteMap(route: Route, onPointClick: (RoutePointId) -> Unit, modifier: Modif
     LaunchedEffect(controller, route.points) {
         controller?.let { map ->
             map.clear()
+            val icons = RoutePointType.entries.associateWith { type ->
+                IconFactory.getInstance(context).fromBitmap(pointMarkerBitmap(type, context.resources.displayMetrics.density))
+            }
             route.points.forEach { point ->
                 map.addMarker(
                     MarkerOptions()
                         .position(LatLng(point.coordinates.latitude, point.coordinates.longitude))
                         .title(point.name)
+                        .icon(icons.getValue(point.type))
                         .snippet(point.id.value)
                 )
             }
@@ -103,4 +113,22 @@ fun RouteMap(route: Route, onPointClick: (RoutePointId) -> Unit, modifier: Modif
     }
 
     AndroidView(factory = { mapView }, modifier = modifier)
+}
+
+private fun pointMarkerBitmap(type: RoutePointType, density: Float): Bitmap {
+    val size = (30 * density).toInt().coerceAtLeast(30)
+    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    val center = size / 2f
+    paint.color = android.graphics.Color.WHITE
+    canvas.drawCircle(center, center, size * 0.47f, paint)
+    paint.color = PointVisuals.color(type)
+    canvas.drawCircle(center, center, size * 0.39f, paint)
+    paint.color = android.graphics.Color.WHITE
+    paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+    paint.textSize = size * 0.42f
+    paint.textAlign = Paint.Align.CENTER
+    canvas.drawText(PointVisuals.symbol(type), center, center - (paint.ascent() + paint.descent()) / 2f, paint)
+    return bitmap
 }

@@ -16,6 +16,7 @@ import org.solidcoder.trackchecker.routes.ui.RouteReviewUiState
 import org.solidcoder.trackchecker.routes.ui.components.PointEditorSheet
 import org.solidcoder.trackchecker.routes.ui.components.RouteIssues
 import org.solidcoder.trackchecker.routes.ui.components.RouteMap
+import org.solidcoder.trackchecker.routes.ui.components.PointTypeDot
 import org.solidcoder.trackchecker.routes.ui.components.displayName
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,7 +97,10 @@ fun RouteReviewScreen(
                         ) {
                             Column {
                                 Text(point.name, fontWeight = FontWeight.Medium)
-                                Text(point.type.displayName(), style = MaterialTheme.typography.bodySmall)
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    PointTypeDot(point.type)
+                                    Text(point.type.displayName(), style = MaterialTheme.typography.bodySmall)
+                                }
                             }
                             Text("Editar", color = MaterialTheme.colorScheme.primary)
                         }
