@@ -102,11 +102,11 @@ class RouteTest {
         assertEquals(50.0, edited.detectionRadiusFor(waypoint.id).meters, 0.0)
     }
 
-    @Test fun `bulk edit cannot create multiple starting points`() {
+    @Test fun `bulk edits may introduce validation issues but cannot mark an invalid route ready`() {
         val original = route()
-        assertThrows(IllegalArgumentException::class.java) {
-            original.updatePoints(setOf(waypoint.id, duplicate.id), PointChanges(type = RoutePointType.START))
-        }
+        val edited = original.updatePoints(setOf(waypoint.id, duplicate.id), PointChanges(type = RoutePointType.START))
+        assertFalse(edited.assessReadiness().validation.canBeReady)
+        assertThrows(IllegalArgumentException::class.java) { edited.markReady() }
         assertEquals(RoutePointType.WAYPOINT, original.points[1].type)
     }
 
