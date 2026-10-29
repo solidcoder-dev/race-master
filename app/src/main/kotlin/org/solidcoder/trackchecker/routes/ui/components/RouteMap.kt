@@ -36,6 +36,8 @@ import java.net.HttpURLConnection
 import org.solidcoder.trackchecker.routes.domain.model.RouteId
 import org.solidcoder.trackchecker.routes.domain.model.RoutePoint
 import org.solidcoder.trackchecker.routes.domain.model.RoutePointId
+import org.solidcoder.trackchecker.routes.domain.model.DetectionRadius
+import kotlin.math.hypot
 
 /**
  * A native MapLibre map hosted inside Compose. Marker snippets carry stable IDs,
@@ -49,13 +51,18 @@ import org.solidcoder.trackchecker.routes.domain.model.RoutePointId
 fun RouteMap(
     routeId: RouteId,
     points: List<RoutePoint>,
+    defaultRadius: DetectionRadius,
+    showDetectionRadii: Boolean,
     selectedPointId: RoutePointId?,
+    selectedPointIds: Set<RoutePointId>,
     onPointClick: (RoutePointId) -> Unit,
+    onPointLongPress: (RoutePointId) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val currentCallback by rememberUpdatedState(onPointClick)
+    val currentLongPress by rememberUpdatedState(onPointLongPress)
     MapLibre.getInstance(context)
 
     val mapView = remember(routeId) { MapView(context).apply { onCreate(null) } }
@@ -89,6 +96,27 @@ fun RouteMap(
             mapView.onStop()
             mapView.onDestroy()
         }
+    }
+
+    DisposableEffect(controller, points) {
+        val map = controller
+        val listener = MapLibreMap.OnMapLongClickListener { location ->
+            if (map == null) return@OnMapLongClickListener false
+            val touched = map.projection.toScreenLocation(location)
+            val thresholdPx = 32f * context.resources.displayMetrics.density
+            val nearby = points.map { point ->
+                val screen = map.projection.toScreenLocation(
+                    LatLng(point.coordinates.latitude, point.coordinates.longitude)
+                )
+                point.id to hypot((screen.x - touched.x).toDouble(), (screen.y - touched.y).toDouble())
+            }.filter { it.second <= thresholdPx }.minByOrNull { it.second }
+            if (nearby != null) {
+                currentLongPress(nearby.first)
+                true
+            } else false
+        }
+        map?.addOnMapLongClickListener(listener)
+        onDispose { map?.removeOnMapLongClickListener(listener) }
     }
 
     LaunchedEffect(controller) {
@@ -141,22 +169,24 @@ fun RouteMap(
 
     LaunchedEffect(controller, styleVersion, points) {
         controller?.let { map ->
-            markers.show(map, points, selectedPointId) { currentCallback(it) }
+            markers.show(map, points, selectedPointIds + listOfNotNull(selectedPointId)) { currentCallback(it) }
         }
     }
 
-    LaunchedEffect(controller, selectedPointId, points) {
+    LaunchedEffect(controller, styleVersion, selectedPointId, selectedPointIds, points) {
+        controller?.let { markers.select(it, selectedPointIds + listOfNotNull(selectedPointId)) }
         val point = points.firstOrNull { it.id == selectedPointId }
         if (point != null) {
             controller?.let { map ->
-                markers.select(map, selectedPointId)
                 map.animateCamera(CameraUpdateFactory.newLatLng(
                     LatLng(point.coordinates.latitude, point.coordinates.longitude)
                 ))
             }
-        } else {
-            controller?.let { markers.select(it, null) }
         }
+    }
+
+    LaunchedEffect(controller, styleVersion, points, defaultRadius, showDetectionRadii) {
+        controller?.let { RouteMapDetectionAreas.render(it, points, defaultRadius, showDetectionRadii) }
     }
 
     Box(modifier) {

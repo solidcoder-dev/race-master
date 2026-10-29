@@ -57,8 +57,9 @@ fun routeUseCases(
     },
     editPoint = EditRoutePointDetailsUseCase { details ->
         val route = repository.findById(details.routeId) ?: error("Ruta no encontrada")
-        repository.save(route.renamePoint(details.pointId, details.name)
-            .changePointType(details.pointId, details.type))
+        val updated = route.renamePoint(details.pointId, details.name)
+            .changePointType(details.pointId, details.type)
+        repository.save(details.changes?.let { updated.updatePoints(setOf(details.pointId), it) } ?: updated)
     },
     editPoints = EditRoutePointsUseCase { command ->
         val route = repository.findById(command.routeId) ?: error("Ruta no encontrada")

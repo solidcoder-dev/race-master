@@ -15,7 +15,8 @@ data class EditRoutePointDetails(
     val routeId: RouteId,
     val pointId: RoutePointId,
     val name: String,
-    val type: RoutePointType
+    val type: RoutePointType,
+    val changes: PointChanges? = null
 )
 
 data class EditRoutePoints(

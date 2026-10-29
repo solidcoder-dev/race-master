@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import org.solidcoder.trackchecker.routes.application.usecases.RouteUseCases
 import org.solidcoder.trackchecker.routes.application.ports.RouteImportSource
 import org.solidcoder.trackchecker.routes.domain.model.RouteId
+import org.solidcoder.trackchecker.routes.domain.model.*
 import org.solidcoder.trackchecker.routes.ui.screens.RoutesListScreen
 import org.solidcoder.trackchecker.routes.ui.screens.RouteReviewScreen
 
@@ -83,8 +84,15 @@ fun RoutesApp(
                 state = reviewState,
                 modifier = Modifier.padding(insets),
                 onBack = { selectedRouteId = null },
-                onEdit = { pointId, name, type ->
-                    viewModel.updatePoint(RouteId(selectedRouteId!!), pointId, name, type)
+                onEdit = { pointId, name, type, changes ->
+                    viewModel.updatePoint(RouteId(selectedRouteId!!), pointId, name, type, changes)
+                },
+                onEditSelected = { pointIds, changes ->
+                    viewModel.updatePoints(RouteId(selectedRouteId!!), pointIds, changes)
+                },
+                onSetRadius = { radius -> viewModel.setDetectionRadius(RouteId(selectedRouteId!!), radius) },
+                onApplyPattern = { pattern, replace ->
+                    viewModel.applyPattern(RouteId(selectedRouteId!!), pattern, replace)
                 },
                 onMarkReady = { viewModel.markReady(RouteId(selectedRouteId!!)) }
             )
