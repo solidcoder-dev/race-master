@@ -1,42 +1,40 @@
 package org.solidcoder.trackchecker.routes.ui.screens
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.solidcoder.trackchecker.routes.domain.model.*
 import org.solidcoder.trackchecker.routes.ui.RouteReviewUiState
-import org.solidcoder.trackchecker.routes.ui.components.PointEditorSheet
-import org.solidcoder.trackchecker.routes.ui.components.RouteIssues
-import org.solidcoder.trackchecker.routes.ui.components.RouteMap
-import org.solidcoder.trackchecker.routes.ui.components.PointTypeDot
-import org.solidcoder.trackchecker.routes.ui.components.PointNameSuggestions
-import org.solidcoder.trackchecker.routes.ui.components.displayName
-import org.solidcoder.trackchecker.routes.ui.components.displayMessage
+import org.solidcoder.trackchecker.routes.ui.components.*
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun RouteReviewScreen(
     state: RouteReviewUiState,
     onBack: () -> Unit,
-    onEdit: (RoutePointId, String, RoutePointType) -> Unit,
+    onEdit: (RoutePointId, String, RoutePointType, PointChanges?) -> Unit,
+    onEditSelected: (Set<RoutePointId>, PointChanges) -> Unit,
+    onSetRadius: (DetectionRadius) -> Unit,
+    onApplyPattern: (ScoringPattern, Boolean) -> Unit,
     onMarkReady: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val loaded = when (state) {
         RouteReviewUiState.Loading -> {
-            Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             return
         }
         RouteReviewUiState.NotFound -> {
@@ -50,14 +48,31 @@ fun RouteReviewScreen(
         is RouteReviewUiState.Loaded -> state
     }
     val route = loaded.route
-
     var editingPointId by remember(route.id) { mutableStateOf<RoutePointId?>(null) }
+    var selectedIds by remember(route.id) { mutableStateOf<Set<RoutePointId>>(emptySet()) }
+    var selectedExpanded by remember(route.id) { mutableStateOf(false) }
+    var editingSelected by remember(route.id) { mutableStateOf(false) }
+    var settingsOpen by remember(route.id) { mutableStateOf(false) }
+    var patternOpen by remember(route.id) { mutableStateOf(false) }
+    var menuOpen by remember(route.id) { mutableStateOf(false) }
+    var showRadii by remember(route.id) { mutableStateOf(false) }
+    val selectionActive = selectedIds.isNotEmpty()
     val selectedPoint = route.points.firstOrNull { it.id == editingPointId }
+
+    fun toggleSelection(id: RoutePointId) {
+        selectedIds = if (id in selectedIds) selectedIds - id else selectedIds + id
+        if (selectedIds.isEmpty()) selectedExpanded = false
+        editingPointId = null
+    }
+    fun openPoint(id: RoutePointId) {
+        if (selectedIds.isNotEmpty()) toggleSelection(id) else editingPointId = id
+    }
+
     val sheetScaffold = rememberBottomSheetScaffoldState()
     val density = LocalDensity.current
     var summaryHeightPx by remember(route.id) { mutableIntStateOf(0) }
-    val peekHeight = if (summaryHeightPx == 0) 180.dp else
-        with(density) { summaryHeightPx.toDp() } + 48.dp
+    val peekHeight = if (summaryHeightPx == 0) 180.dp
+        else with(density) { summaryHeightPx.toDp() } + 48.dp
 
     BottomSheetScaffold(
         modifier = modifier,
@@ -65,8 +80,45 @@ fun RouteReviewScreen(
         sheetPeekHeight = peekHeight,
         topBar = {
             TopAppBar(
-                title = { Text(route.name, maxLines = 1) },
-                navigationIcon = { TextButton(onClick = onBack) { Text("←") } }
+                title = {
+                    Text(if (selectionActive) "${selectedIds.size} seleccionados" else route.name,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                },
+                navigationIcon = {
+                    TextButton(onClick = {
+                        if (selectionActive) selectedIds = emptySet() else onBack()
+                    }) { Text(if (selectionActive) "×" else "←") }
+                },
+                actions = {
+                    if (selectionActive) {
+                        IconButton(onClick = { editingSelected = true }, modifier = Modifier.semantics {
+                            contentDescription = "Editar puntos seleccionados"
+                        }) { Text("✎", style = MaterialTheme.typography.titleLarge) }
+                    } else {
+                        IconButton(onClick = { showRadii = !showRadii }, modifier = Modifier.semantics {
+                            contentDescription = if (showRadii) "Ocultar radios" else "Mostrar radios"
+                        }) {
+                            Text("◎", style = MaterialTheme.typography.titleLarge,
+                                color = if (showRadii) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Box {
+                            IconButton(onClick = { menuOpen = true }, modifier = Modifier.semantics {
+                                contentDescription = "Opciones de ruta"
+                            }) { Text("⋮", style = MaterialTheme.typography.titleLarge) }
+                            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                                DropdownMenuItem(text = { Text("Configuración de ruta") }, onClick = {
+                                    menuOpen = false
+                                    settingsOpen = true
+                                })
+                                DropdownMenuItem(text = { Text("Aplicar patrón de puntuación") }, onClick = {
+                                    menuOpen = false
+                                    patternOpen = true
+                                })
+                            }
+                        }
+                    }
+                }
             )
         },
         sheetContent = {
@@ -80,56 +132,76 @@ fun RouteReviewScreen(
                         Modifier.fillMaxWidth().onSizeChanged { summaryHeightPx = it.height },
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text(
-                            "${route.points.size} puntos · ${loaded.issues.size} incidencias",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        loaded.issues.firstOrNull()?.let { issue ->
-                            Text(
-                                issue.displayMessage(route),
-                                color = if (issue.severity == IssueSeverity.ERROR)
-                                    MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                        if (selectionActive) {
+                            Text("${selectedIds.size} puntos seleccionados",
+                                style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                            TextButton(onClick = { selectedExpanded = !selectedExpanded }) {
+                                Text(if (selectedExpanded) "Ocultar selección" else "Ver selección (${selectedIds.size})")
+                            }
+                        } else {
+                            Text("${route.points.size} puntos · ${loaded.issues.size} incidencias",
+                                style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                            loaded.issues.firstOrNull()?.let { issue ->
+                                Text(issue.displayMessage(route),
+                                    color = if (issue.severity == IssueSeverity.ERROR)
+                                        MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                            Button(
+                                onClick = onMarkReady,
+                                enabled = route.status != RouteStatus.READY &&
+                                    loaded.issues.none { it.severity == IssueSeverity.ERROR },
+                                modifier = Modifier.fillMaxWidth()
+                            ) { Text(if (route.status == RouteStatus.READY) "Ruta lista" else "Validar ruta") }
+                            Text("Desliza hacia arriba para ver incidencias y puntos",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Button(
-                            onClick = onMarkReady,
-                            enabled = route.status != RouteStatus.READY && loaded.issues.none { it.severity == IssueSeverity.ERROR },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(if (route.status == RouteStatus.READY) "Ruta lista" else "Validar ruta")
-                        }
-                        Text(
-                            "Desliza hacia arriba para ver incidencias y puntos",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
                 }
-                if (loaded.issues.isNotEmpty()) {
+                if (selectionActive && selectedExpanded) {
                     item {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            RouteIssues(route = route, issues = loaded.issues, onSelectPoint = { editingPointId = it })
+                        Column {
+                            route.points.filter { it.id in selectedIds }.forEach { point ->
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                    PointTypeDot(point.type)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(point.name, modifier = Modifier.weight(1f), maxLines = 1)
+                                    TextButton(onClick = { toggleSelection(point.id) }) { Text("Quitar") }
+                                }
+                            }
                         }
                     }
+                }
+                if (!selectionActive && loaded.issues.isNotEmpty()) {
+                    item { RouteIssues(route = route, issues = loaded.issues, onSelectPoint = { openPoint(it) }) }
                 }
                 items(route.points, key = { it.id.value }) { point ->
                     Row(
-                        Modifier.fillMaxWidth().clickable { editingPointId = point.id }
-                            .padding(vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        Modifier.fillMaxWidth().combinedClickable(
+                            onClick = { openPoint(point.id) },
+                            onLongClick = { toggleSelection(point.id) }
+                        ).padding(vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        if (selectionActive) {
+                            Checkbox(checked = point.id in selectedIds, onCheckedChange = { toggleSelection(point.id) })
+                        }
+                        Column(Modifier.weight(1f)) {
                             Text(point.name, fontWeight = FontWeight.Medium)
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                                 PointTypeDot(point.type)
                                 Text(point.type.displayName(), style = MaterialTheme.typography.bodySmall)
+                                val score = route.scoringFor(point.id)
+                                val scoreText = when (point.type) {
+                                    RoutePointType.WAYPOINT -> score?.whenPassed?.let { "+$it pts" }
+                                    RoutePointType.CHECKPOINT -> score?.whenMissed?.let { "$it pts" }
+                                    else -> null
+                                }
+                                scoreText?.let { Text("· $it", style = MaterialTheme.typography.bodySmall) }
                             }
                         }
-                        Text("›", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (!selectionActive) Text("›", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     HorizontalDivider()
                 }
@@ -139,32 +211,53 @@ fun RouteReviewScreen(
         RouteMap(
             routeId = route.id,
             points = route.points,
+            defaultRadius = route.defaultDetectionRadius,
+            showDetectionRadii = showRadii,
             selectedPointId = editingPointId,
+            selectedPointIds = selectedIds,
             modifier = Modifier.fillMaxSize().padding(contentPadding),
-            onPointClick = { editingPointId = it }
+            onPointClick = { openPoint(it) },
+            onPointLongPress = { toggleSelection(it) }
         )
     }
 
     selectedPoint?.let { point ->
-        PointEditorSheet(
-            point = point,
+        PointEditorSheet(point = point, defaultRadius = route.defaultDetectionRadius,
             suggestedName = PointNameSuggestions.forPoint(route.points, point.id),
             onDismiss = { editingPointId = null },
-            onSave = { name, type ->
-                onEdit(point.id, name, type)
+            onSave = { name, type, changes ->
+                onEdit(point.id, name, type, changes)
                 editingPointId = null
-            }
-        )
+            })
     }
+    if (editingSelected && selectionActive) {
+        BulkPointEditorSheet(count = selectedIds.size, onDismiss = { editingSelected = false }, onSave = { changes ->
+            onEditSelected(selectedIds, changes)
+            selectedIds = emptySet()
+            selectedExpanded = false
+            editingSelected = false
+        })
+    }
+    if (settingsOpen) RouteSettingsSheet(route.defaultDetectionRadius,
+        onDismiss = { settingsOpen = false }, onSave = {
+            onSetRadius(it)
+            settingsOpen = false
+        })
+    if (patternOpen) ScoringPatternDialog(
+        current = route.scoringPattern,
+        overrideCount = route.points.count { it.scoreValueOverride != null },
+        onDismiss = { patternOpen = false },
+        onApply = { pattern, replace ->
+            onApplyPattern(pattern, replace)
+            patternOpen = false
+        }
+    )
 }
 
 @Composable
 private fun RouteReviewUnavailable(message: String, onBack: () -> Unit, modifier: Modifier) {
-    Column(
-        modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally) {
         Text(message, style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(16.dp))
         Button(onClick = onBack) { Text("Volver a mis rutas") }

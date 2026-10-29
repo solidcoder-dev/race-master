@@ -15,6 +15,8 @@ import org.solidcoder.trackchecker.routes.application.usecases.RouteUseCases
 import org.solidcoder.trackchecker.routes.domain.model.*
 import org.solidcoder.trackchecker.routes.application.ports.RouteImportSource
 import org.solidcoder.trackchecker.routes.application.usecases.EditRoutePointDetails
+import org.solidcoder.trackchecker.routes.application.usecases.EditRoutePoints
+import org.solidcoder.trackchecker.routes.application.usecases.ApplyRouteScoringPattern
 import org.xml.sax.SAXException
 import org.xmlpull.v1.XmlPullParserException
 
@@ -75,8 +77,17 @@ class RoutesViewModel(
         actions.rename(id, name)
     }
 
-    fun updatePoint(id: RouteId, pointId: RoutePointId, name: String, type: RoutePointType) =
-        change(id) { actions.editPoint(EditRoutePointDetails(id, pointId, name, type)) }
+    fun updatePoint(id: RouteId, pointId: RoutePointId, name: String, type: RoutePointType, changes: PointChanges?) =
+        change(id) { actions.editPoint(EditRoutePointDetails(id, pointId, name, type, changes)) }
+
+    fun updatePoints(id: RouteId, pointIds: Set<RoutePointId>, changes: PointChanges) =
+        change(id) { actions.editPoints(EditRoutePoints(id, pointIds, changes)) }
+
+    fun setDetectionRadius(id: RouteId, radius: DetectionRadius) =
+        change(id) { actions.setRadius(id, radius) }
+
+    fun applyPattern(id: RouteId, pattern: ScoringPattern, replaceOverrides: Boolean) =
+        change(id) { actions.applyPattern(ApplyRouteScoringPattern(id, pattern, replaceOverrides)) }
 
     fun markReady(id: RouteId) = change(id) {
         actions.markReady(id)

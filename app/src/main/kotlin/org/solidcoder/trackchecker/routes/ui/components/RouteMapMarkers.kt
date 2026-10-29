@@ -30,11 +30,11 @@ internal class RouteMapMarkers(context: Context) {
         iconFactory.fromBitmap(pointMarkerBitmap(type, density, selected = true))
     }
     private var markers: Map<RoutePointId, Marker> = emptyMap()
-    private var selectedPointId: RoutePointId? = null
+    private var selectedPointIds: Set<RoutePointId> = emptySet()
 
-    fun show(map: MapLibreMap, points: List<RoutePoint>, selection: RoutePointId?, onPointClick: (RoutePointId) -> Unit) {
+    fun show(map: MapLibreMap, points: List<RoutePoint>, selection: Set<RoutePointId>, onPointClick: (RoutePointId) -> Unit) {
         map.clear()
-        selectedPointId = selection
+        selectedPointIds = selection
         markerTypes = points.associate { it.id to it.type }
         markers = points.associate { point ->
             point.id to map.addMarker(
@@ -42,7 +42,7 @@ internal class RouteMapMarkers(context: Context) {
                     .position(LatLng(point.coordinates.latitude, point.coordinates.longitude))
                     .title(point.name)
                     .snippet(point.id.value)
-                    .icon(iconFor(point.type, selected = point.id == selection))
+                    .icon(iconFor(point.type, selected = point.id in selection))
             )
         }
         map.setOnMarkerClickListener { marker ->
@@ -51,14 +51,14 @@ internal class RouteMapMarkers(context: Context) {
         }
     }
 
-    fun select(map: MapLibreMap, selection: RoutePointId?) {
-        if (selectedPointId == selection) return
-        val previous = selectedPointId
-        selectedPointId = selection
-        listOfNotNull(previous, selection).distinct().forEach { id ->
+    fun select(map: MapLibreMap, selection: Set<RoutePointId>) {
+        if (selectedPointIds == selection) return
+        val changed = selectedPointIds union selection
+        selectedPointIds = selection
+        changed.forEach { id ->
             val marker = markers[id] ?: return@forEach
             val type = markerTypes[id] ?: return@forEach
-            marker.icon = iconFor(type, selected = id == selection)
+            marker.icon = iconFor(type, selected = id in selection)
             map.updateMarker(marker)
         }
     }
