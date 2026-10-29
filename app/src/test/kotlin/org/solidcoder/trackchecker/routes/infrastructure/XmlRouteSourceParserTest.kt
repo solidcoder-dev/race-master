@@ -82,6 +82,37 @@ class XmlRouteSourceParserTest {
             parser.read(RouteImportSource("route.gpx", gpx.toByteArray())).single().type)
     }
 
+    @Test fun `free text in a description does not override a waypoint name`() {
+        val kml = """<kml><Placemark><name>WP01</name>
+            <description>Start of a difficult section</description>
+            <Point><coordinates>-15,28</coordinates></Point></Placemark></kml>"""
+        val point = parser.read(RouteImportSource("route.kml", kml.toByteArray())).single()
+        assertEquals(RoutePointType.WAYPOINT, point.type)
+    }
+
+    @Test fun `ambiguous descriptive text cannot silently classify a point`() {
+        val kml = """<kml><Placemark><name>Unnamed point</name>
+            <description>Checkpoint to check before the finish</description>
+            <Point><coordinates>-15,28</coordinates></Point></Placemark></kml>"""
+        val point = parser.read(RouteImportSource("route.kml", kml.toByteArray())).single()
+        assertEquals(RoutePointType.OTHER, point.type)
+    }
+
+    @Test fun `explicit description type can override a point label`() {
+        val kml = """<kml><Placemark><name>WP01</name>
+            <description>Tipo: CP</description>
+            <Point><coordinates>-15,28</coordinates></Point></Placemark></kml>"""
+        val point = parser.read(RouteImportSource("route.kml", kml.toByteArray())).single()
+        assertEquals(RoutePointType.CHECKPOINT, point.type)
+    }
+
+    @Test fun `names need a recognized prefix boundary`() {
+        val kml = """<kml><Placemark><name>WPOINTED</name>
+            <Point><coordinates>-15,28</coordinates></Point></Placemark></kml>"""
+        val point = parser.read(RouteImportSource("route.kml", kml.toByteArray())).single()
+        assertEquals(RoutePointType.OTHER, point.type)
+    }
+
     @Test fun `KMZ extracts its embedded KML`() {
         val zipped = ByteArrayOutputStream().also { output ->
             ZipOutputStream(output).use { zip ->
