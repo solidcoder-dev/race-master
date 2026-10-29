@@ -35,7 +35,13 @@ fun RoutesListScreen(
                 actions = {
                     if (state.routes.isNotEmpty()) {
                         TextButton(onClick = onImport, enabled = !state.importing) {
-                            Text("+ Importar")
+                            if (state.importing) {
+                                CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Importando…")
+                            } else {
+                                Text("+ Importar")
+                            }
                         }
                     }
                 }
@@ -48,7 +54,17 @@ fun RoutesListScreen(
                     Text("Todavía no hay rutas", style = MaterialTheme.typography.titleLarge)
                     Text("Importa tu primera ruta para empezar", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Button(onClick = onImport, enabled = !state.importing) {
-                        Text(if (state.importing) "Importando..." else "Importar ruta")
+                        if (state.importing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Importando…")
+                        } else {
+                            Text("Importar ruta")
+                        }
                     }
                     Text("KML · GPX · KMZ", style = MaterialTheme.typography.labelSmall)
                 }

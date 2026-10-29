@@ -6,8 +6,11 @@ import org.solidcoder.trackchecker.routes.domain.model.RouteIssue
 data class RoutesUiState(
     val routes: List<Route> = emptyList(),
     val importing: Boolean = false,
-    val error: String? = null
 )
+
+sealed interface RoutesUiEvent {
+    data class Message(val text: String, val isError: Boolean = false) : RoutesUiEvent
+}
 
 /** A missing route is not a loading state (for example, after deletion). */
 sealed interface RouteReviewUiState {

@@ -27,25 +27,34 @@ fun RoutesApp(
     val viewModel: RoutesViewModel = viewModel(factory = remember(actions) { RoutesViewModel.factory(actions) })
     val routesState by viewModel.routes.collectAsStateWithLifecycle()
     val reviewState by viewModel.review.collectAsStateWithLifecycle()
+    val snackbar = remember { SnackbarHostState() }
     var selectedRouteId by rememberSaveable { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
-    val snackbar = remember { SnackbarHostState() }
 
     val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) scope.launch {
+        if (uri == null) {
+            viewModel.cancelImport()
+        } else scope.launch {
             try {
                 val source = readSelectedRoute(uri)
                 viewModel.import(source) { selectedRouteId = it.value }
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
             } catch (error: Exception) {
                 viewModel.report(error)
             }
         }
     }
 
-    LaunchedEffect(routesState.error) {
-        routesState.error?.let {
-            snackbar.showSnackbar(it)
-            viewModel.clearError()
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is RoutesUiEvent.Message -> snackbar.showSnackbar(
+                    message = event.text,
+                    duration = if (event.isError) androidx.compose.material3.SnackbarDuration.Long
+                    else androidx.compose.material3.SnackbarDuration.Short
+                )
+            }
         }
     }
     LaunchedEffect(selectedRouteId) {
@@ -57,7 +66,14 @@ fun RoutesApp(
             RoutesListScreen(
                 state = routesState,
                 modifier = Modifier.padding(insets),
-                onImport = { filePicker.launch(arrayOf("*/*")) },
+                onImport = {
+                    viewModel.beginImport()
+                    try {
+                        filePicker.launch(arrayOf("*/*"))
+                    } catch (error: Exception) {
+                        viewModel.report(error)
+                    }
+                },
                 onOpen = { selectedRouteId = it.value },
                 onRename = { id, name -> viewModel.rename(id, name) },
                 onDelete = { id -> viewModel.delete(id) {} }
