@@ -1,6 +1,7 @@
 package org.solidcoder.trackchecker.routes.ui
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.Scaffold
@@ -35,7 +36,9 @@ fun RoutesApp(
     val routesState by viewModel.routes.collectAsStateWithLifecycle()
     val reviewState by viewModel.review.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    var selectedRouteId by rememberSaveable { mutableStateOf<String?>(null) }
+    var navigation by rememberSaveable(stateSaver = TrackNavigationState.Saver) {
+        mutableStateOf(TrackNavigationState(TrackDestination.ROUTES))
+    }
     val scope = rememberCoroutineScope()
 
     val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -44,7 +47,7 @@ fun RoutesApp(
         } else scope.launch {
             try {
                 val source = readSelectedRoute(uri)
-                viewModel.import(source) { selectedRouteId = it.value }
+                viewModel.import(source) { navigation = navigation.openRoute(it.value) }
             } catch (error: kotlinx.coroutines.CancellationException) {
                 throw error
             } catch (error: Exception) {
@@ -54,7 +57,7 @@ fun RoutesApp(
     }
 
     val trackFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        val routeId = selectedRouteId?.let(::RouteId)
+        val routeId = navigation.routeId?.let(::RouteId)
         if (uri != null && routeId != null) scope.launch {
             try {
                 viewModel.importTrack(routeId, readSelectedTrack(uri))
@@ -77,12 +80,16 @@ fun RoutesApp(
             }
         }
     }
-    LaunchedEffect(selectedRouteId) {
-        selectedRouteId?.let { viewModel.open(RouteId(it)) }
+    LaunchedEffect(navigation.routeId) {
+        navigation.routeId?.let { viewModel.open(RouteId(it)) }
+    }
+
+    BackHandler(enabled = navigation.destination != TrackDestination.ROUTES) {
+        navigation = navigation.back()
     }
 
     Scaffold(snackbarHost = { SnackbarHost(snackbar) }) { insets ->
-        if (selectedRouteId == null) {
+        if (navigation.destination == TrackDestination.ROUTES) {
             RoutesListScreen(
                 state = routesState,
                 modifier = Modifier.padding(insets),
@@ -94,31 +101,34 @@ fun RoutesApp(
                         viewModel.report(error)
                     }
                 },
-                onOpen = { selectedRouteId = it.value },
+                onOpen = { navigation = navigation.openRoute(it.value) },
                 onRename = { id, name -> viewModel.rename(id, name) },
                 onDelete = { id -> viewModel.delete(id) {} }
             )
-        } else {
+        } else if (navigation.destination == TrackDestination.ROUTE_REVIEW) {
+            val routeId = requireNotNull(navigation.routeId).let(::RouteId)
             RouteReviewScreen(
                 state = reviewState,
                 modifier = Modifier.padding(insets),
-                onBack = { selectedRouteId = null },
+                onBack = { navigation = navigation.back() },
                 onEdit = { pointId, name, type, changes ->
-                    viewModel.updatePoint(RouteId(selectedRouteId!!), pointId, name, type, changes)
+                    viewModel.updatePoint(routeId, pointId, name, type, changes)
                 },
                 onEditSelected = { pointIds, changes ->
-                    viewModel.updatePoints(RouteId(selectedRouteId!!), pointIds, changes)
+                    viewModel.updatePoints(routeId, pointIds, changes)
                 },
-                onSetRadius = { radius -> viewModel.setDetectionRadius(RouteId(selectedRouteId!!), radius) },
+                onSetRadius = { radius -> viewModel.setDetectionRadius(routeId, radius) },
                 onApplyPattern = { pattern, replace ->
-                    viewModel.applyPattern(RouteId(selectedRouteId!!), pattern, replace)
+                    viewModel.applyPattern(routeId, pattern, replace)
                 },
-                onMarkReady = { viewModel.markReady(RouteId(selectedRouteId!!)) },
+                onMarkReady = { viewModel.markReady(routeId) },
                 onImportTrack = { trackFilePicker.launch(arrayOf("*/*")) },
                 onSelectTrack = viewModel::selectTrack,
-                onRecalculateTrack = { viewModel.recalculateTrack(RouteId(selectedRouteId!!), it) },
-                onDeleteTrack = { viewModel.deleteTrack(RouteId(selectedRouteId!!), it) }
+                onRecalculateTrack = { viewModel.recalculateTrack(routeId, it) },
+                onDeleteTrack = { viewModel.deleteTrack(routeId, it) }
             )
+        } else {
+            TrackNavigationPlaceholder(navigation.destination, onBack = { navigation = navigation.back() })
         }
     }
 }
