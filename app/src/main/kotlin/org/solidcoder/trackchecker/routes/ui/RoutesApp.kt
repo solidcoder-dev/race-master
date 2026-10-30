@@ -7,6 +7,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
@@ -22,6 +26,7 @@ import org.solidcoder.trackchecker.routes.domain.model.RouteId
 import org.solidcoder.trackchecker.routes.domain.model.*
 import org.solidcoder.trackchecker.routes.ui.screens.RoutesListScreen
 import org.solidcoder.trackchecker.routes.ui.screens.RouteReviewScreen
+import org.solidcoder.trackchecker.tracks.ui.screens.TracksListScreen
 
 @Composable
 fun RoutesApp(
@@ -124,6 +129,19 @@ fun RoutesApp(
                 onMarkReady = { viewModel.markReady(routeId) },
                 onOpenTracks = { navigation = navigation.openTracks() }
             )
+        } else if (navigation.destination == TrackDestination.TRACKS) {
+            val loaded = reviewState as? RouteReviewUiState.Loaded
+            if (loaded == null) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            } else {
+                TracksListScreen(
+                    route = loaded.route,
+                    tracks = loaded.tracks,
+                    onBack = { navigation = navigation.back() },
+                    onImport = { trackFilePicker.launch(arrayOf("*/*")) },
+                    onOpen = { navigation = navigation.openTrackDetail(it.value) }
+                )
+            }
         } else {
             TrackNavigationPlaceholder(navigation.destination, onBack = { navigation = navigation.back() })
         }
