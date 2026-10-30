@@ -80,7 +80,7 @@ class XmlTrackSourceParserTest {
         val zipped = ByteArrayOutputStream().also { output ->
             ZipOutputStream(output).use { zip ->
                 zip.putNextEntry(ZipEntry("doc.kml"))
-                zip.write("<kml><LineString><coordinates>-15,28 -15.1,28.1</coordinates></LineString></kml>".toByteArray())
+                zip.write("<kml><vendor:metadata/><LineString><coordinates>-15,28 -15.1,28.1</coordinates></LineString></kml>".toByteArray())
                 zip.closeEntry()
             }
         }.toByteArray()
