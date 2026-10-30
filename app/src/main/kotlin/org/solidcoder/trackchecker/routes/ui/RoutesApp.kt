@@ -28,6 +28,8 @@ import org.solidcoder.trackchecker.routes.ui.screens.RoutesListScreen
 import org.solidcoder.trackchecker.routes.ui.screens.RouteReviewScreen
 import org.solidcoder.trackchecker.tracks.ui.screens.TracksListScreen
 import org.solidcoder.trackchecker.scoring.ui.screens.TrackDetailScreen
+import org.solidcoder.trackchecker.scoring.ui.screens.TrackMapScreen
+import org.solidcoder.trackchecker.tracks.domain.model.TrackId
 
 @Composable
 fun RoutesApp(
@@ -154,7 +156,24 @@ fun RoutesApp(
                     trackName = selected.track.name,
                     evaluation = selected.evaluation,
                     onBack = { navigation = navigation.back() },
-                    onMap = { navigation = navigation.openTrackMap() }
+                    onMap = {
+                        viewModel.selectTrack(selected.track.id)
+                        navigation = navigation.openTrackMap()
+                    }
+                )
+            }
+        } else if (navigation.destination == TrackDestination.TRACK_MAP) {
+            val loaded = reviewState as? RouteReviewUiState.Loaded
+            val selected = loaded?.tracks?.firstOrNull { it.track.id.value == navigation.trackId }
+            if (loaded == null || selected == null) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            } else {
+                TrackMapScreen(
+                    route = loaded.route,
+                    trackName = selected.track.name,
+                    track = loaded.selectedTrack?.takeIf { it.id == selected.track.id },
+                    evaluation = selected.evaluation,
+                    onBack = { navigation = navigation.back() }
                 )
             }
         } else {
