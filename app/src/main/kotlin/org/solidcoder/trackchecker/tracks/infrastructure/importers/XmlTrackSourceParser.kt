@@ -25,10 +25,7 @@ class XmlTrackSourceParser(
             else -> error("Formato de track no admitido: .$extension")
         }
         val isKml = extension == "kml" || extension == "kmz"
-        val parser = createParser().apply {
-            setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, !isKml)
-            setInput(ByteArrayInputStream(bytes), null)
-        }
+        val parser = createParser().configure(bytes, processNamespaces = !isKml)
         parser.nextTag()
         val result = when (localName(parser.name).lowercase(Locale.ROOT)) {
             "gpx" -> parseGpx(parser)
@@ -178,6 +175,11 @@ class XmlTrackSourceParser(
     }
 
     private fun localName(name: String?): String = name?.substringAfter(':').orEmpty()
+
+    private fun XmlPullParser.configure(bytes: ByteArray, processNamespaces: Boolean): XmlPullParser = apply {
+        setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, processNamespaces)
+        setInput(ByteArrayInputStream(bytes), null)
+    }
 
     private companion object {
         const val MAX_BYTES = 20 * 1024 * 1024
