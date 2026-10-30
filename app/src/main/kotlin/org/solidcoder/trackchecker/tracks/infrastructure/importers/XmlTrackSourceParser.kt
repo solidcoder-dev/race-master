@@ -24,12 +24,13 @@ class XmlTrackSourceParser(
             "kmz" -> unzipKml(source.content)
             else -> error("Formato de track no admitido: .$extension")
         }
+        val isKml = extension == "kml" || extension == "kmz"
         val parser = createParser().apply {
-            setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
+            setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, !isKml)
             setInput(ByteArrayInputStream(bytes), null)
         }
         parser.nextTag()
-        val result = when (parser.name.lowercase(Locale.ROOT)) {
+        val result = when (localName(parser.name).lowercase(Locale.ROOT)) {
             "gpx" -> parseGpx(parser)
             "kml" -> parseKml(parser)
             else -> error("El archivo no contiene un KML o GPX")
@@ -111,30 +112,30 @@ class XmlTrackSourceParser(
             when (parser.eventType) {
                 XmlPullParser.DOCDECL -> error("El archivo XML contiene una declaración no permitida")
                 XmlPullParser.START_TAG -> when {
-                    parser.name == "LineString" -> lineDepth = parser.depth
-                    parser.name == "Track" -> {
+                    localName(parser.name) == "LineString" -> lineDepth = parser.depth
+                    localName(parser.name) == "Track" -> {
                         trackDepth = parser.depth
                         coordinates = mutableListOf()
                         timestamps = mutableListOf()
                     }
-                    lineDepth > 0 && parser.depth == lineDepth + 1 && parser.name == "coordinates" -> {
+                    lineDepth > 0 && parser.depth == lineDepth + 1 && localName(parser.name) == "coordinates" -> {
                         val points = parser.nextText().trim().split(Regex("\\s+"))
                             .filter { it.isNotBlank() }
                             .map(::parseKmlCoordinate)
                         if (points.isNotEmpty()) segments.add(TrackSegment(points))
                     }
-                    trackDepth > 0 && parser.depth == trackDepth + 1 && parser.name == "coord" -> {
+                    trackDepth > 0 && parser.depth == trackDepth + 1 && localName(parser.name) == "coord" -> {
                         val values = parser.nextText().trim().split(Regex("\\s+"))
                         require(values.size >= 2) { "Coordenada gx:Track incompleta" }
                         coordinates.add(GpsSample(values[1].toDouble(), values[0].toDouble()))
                     }
-                    trackDepth > 0 && parser.depth == trackDepth + 1 && parser.name == "when" -> {
+                    trackDepth > 0 && parser.depth == trackDepth + 1 && localName(parser.name) == "when" -> {
                         timestamps.add(parseTimestamp(parser.nextText()))
                     }
                 }
                 XmlPullParser.END_TAG -> when {
-                    parser.name == "LineString" && parser.depth == lineDepth -> lineDepth = -1
-                    parser.name == "Track" && parser.depth == trackDepth -> {
+                    localName(parser.name) == "LineString" && parser.depth == lineDepth -> lineDepth = -1
+                    localName(parser.name) == "Track" && parser.depth == trackDepth -> {
                         if (coordinates.isNotEmpty()) {
                             val samples = coordinates.mapIndexed { index, point ->
                                 point.copy(timestampEpochMs = timestamps.getOrNull(index))
@@ -176,5 +177,9 @@ class XmlTrackSourceParser(
         }
     }
 
-    private companion object { const val MAX_BYTES = 20 * 1024 * 1024 }
+    private fun localName(name: String?): String = name?.substringAfter(':').orEmpty()
+
+    private companion object {
+        const val MAX_BYTES = 20 * 1024 * 1024
+    }
 }
