@@ -48,6 +48,15 @@ class XmlTrackSourceParserTest {
         assertEquals(-15.2, segments.single().samples.last().longitude, 0.0)
     }
 
+    @Test fun `KML ignores undeclared vendor extensions around track geometry`() {
+        val xml = """<kml><Document><Placemark>
+          <vendor:metadata><vendor:name>recorded</vendor:name></vendor:metadata>
+          <LineString><coordinates>-15,28 -15.1,28.1</coordinates></LineString>
+          </Placemark></Document></kml>"""
+        val segments = parser.read(TrackImportSource("track.kml", xml.toByteArray()))
+        assertEquals(2, segments.single().samples.size)
+    }
+
     @Test fun `KML gx Track preserves ordered coordinates and timestamps`() {
         val xml = """<kml xmlns:gx="http://www.google.com/kml/ext/2.2"><Placemark><gx:Track>
           <when>2024-01-01T10:00:00Z</when><when>2024-01-01T10:01:00Z</when>
