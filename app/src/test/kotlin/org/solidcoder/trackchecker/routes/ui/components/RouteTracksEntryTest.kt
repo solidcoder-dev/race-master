@@ -15,14 +15,13 @@ class RouteTracksEntryTest {
     }
 
     @Test
-    fun `validated routes never show a validation or import button in the bottom sheet`() {
-        assertEquals(false, shouldShowValidationButton(trackCount = 0, routeReady = true, canValidate = true))
-        assertEquals(false, shouldShowValidationButton(trackCount = 12, routeReady = true, canValidate = true))
+    fun `tracks entry is visible only after route validation`() {
+        assertEquals(true, shouldShowTracksEntry(routeReady = true))
+        assertEquals(false, shouldShowTracksEntry(routeReady = false))
     }
 
     @Test
-    fun `draft routes keep validation available even when tracks already exist`() {
-        assertEquals(true, shouldShowValidationButton(trackCount = 12, routeReady = false, canValidate = true))
-        assertEquals(false, shouldShowValidationButton(trackCount = 12, routeReady = false, canValidate = false))
+    fun `track count does not make an unvalidated route visible`() {
+        assertEquals(false, shouldShowTracksEntry(routeReady = false))
     }
 }

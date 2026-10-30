@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,16 +22,13 @@ fun tracksEntryCopy(trackCount: Int): TracksEntryCopy = if (trackCount == 0) {
     TracksEntryCopy("Tracks", "$trackCount recorridos evaluados", "Abrir")
 }
 
-fun shouldShowValidationButton(trackCount: Int, routeReady: Boolean, canValidate: Boolean): Boolean =
-    !routeReady && canValidate
+fun shouldShowTracksEntry(routeReady: Boolean): Boolean = routeReady
 
 @Composable
 fun RouteTracksEntry(
     trackCount: Int,
     routeReady: Boolean,
-    canValidate: Boolean,
     onOpen: () -> Unit,
-    onValidate: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val copy = tracksEntryCopy(trackCount)
@@ -60,11 +56,6 @@ fun RouteTracksEntry(
             Text("›", style = MaterialTheme.typography.titleLarge,
                 color = if (routeReady) MaterialTheme.colorScheme.onSurface
                 else MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        if (shouldShowValidationButton(trackCount, routeReady, canValidate)) {
-            OutlinedButton(onClick = onValidate) {
-                Text("Validar ruta")
-            }
         }
     }
 }

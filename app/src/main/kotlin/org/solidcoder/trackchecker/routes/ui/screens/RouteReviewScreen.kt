@@ -107,13 +107,17 @@ fun RouteReviewScreen(
                                 Text(if (selectedExpanded) "Ocultar selección" else "Ver selección (${selectedIds.size})")
                             }
                         } else {
-                            RouteTracksEntry(
-                                trackCount = loaded.tracks.size,
-                                routeReady = routeReady,
-                                canValidate = loaded.issues.none { it.severity == IssueSeverity.ERROR },
-                                onOpen = onOpenTracks,
-                                onValidate = onMarkReady
-                            )
+                            if (routeReady) {
+                                RouteTracksEntry(
+                                    trackCount = loaded.tracks.size,
+                                    routeReady = true,
+                                    onOpen = onOpenTracks
+                                )
+                            } else if (loaded.issues.none { it.severity == IssueSeverity.ERROR }) {
+                                Button(onClick = onMarkReady, modifier = Modifier.fillMaxWidth()) {
+                                    Text("Validar ruta")
+                                }
+                            }
                             Text("${route.points.size} puntos · ${loaded.issues.size} incidencias",
                                 style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                             loaded.issues.firstOrNull()?.let { issue ->
