@@ -23,6 +23,9 @@ fun tracksEntryCopy(trackCount: Int): TracksEntryCopy = if (trackCount == 0) {
     TracksEntryCopy("Tracks", "$trackCount recorridos evaluados", "Abrir")
 }
 
+fun shouldShowValidationButton(trackCount: Int, routeReady: Boolean, canValidate: Boolean): Boolean =
+    !routeReady && canValidate
+
 @Composable
 fun RouteTracksEntry(
     trackCount: Int,
@@ -48,15 +51,19 @@ fun RouteTracksEntry(
                 Text(copy.title, fontWeight = FontWeight.SemiBold)
                 Text(copy.summary, style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (trackCount == 0) {
+                    Text(copy.action, style = MaterialTheme.typography.bodySmall,
+                        color = if (routeReady) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
             Text("›", style = MaterialTheme.typography.titleLarge,
                 color = if (routeReady) MaterialTheme.colorScheme.onSurface
                 else MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        if (trackCount == 0) {
-            OutlinedButton(onClick = if (routeReady) onOpen else onValidate,
-                enabled = routeReady || canValidate) {
-                Text(if (routeReady) copy.action else "Validar ruta")
+        if (shouldShowValidationButton(trackCount, routeReady, canValidate)) {
+            OutlinedButton(onClick = onValidate) {
+                Text("Validar ruta")
             }
         }
     }
