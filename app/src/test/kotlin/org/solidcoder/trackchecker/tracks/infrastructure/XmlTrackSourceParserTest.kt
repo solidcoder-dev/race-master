@@ -67,6 +67,15 @@ class XmlTrackSourceParserTest {
         assertEquals(1704103260000L, samples.last().timestampEpochMs)
     }
 
+    @Test fun `KML vendor geometry names are not treated as supported track geometry`() {
+        val xml = """<kml><vendor:Track>
+          <vendor:coord>-15 28 0</vendor:coord><vendor:coord>-15.1 28.1 0</vendor:coord>
+          </vendor:Track></kml>"""
+        assertThrows(IllegalArgumentException::class.java) {
+            parser.read(TrackImportSource("track.kml", xml.toByteArray()))
+        }
+    }
+
     @Test fun `KMZ imports the contained track KML`() {
         val zipped = ByteArrayOutputStream().also { output ->
             ZipOutputStream(output).use { zip ->
