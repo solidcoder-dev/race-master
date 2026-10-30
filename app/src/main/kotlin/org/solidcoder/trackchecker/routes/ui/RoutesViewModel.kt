@@ -19,6 +19,7 @@ import org.solidcoder.trackchecker.routes.application.usecases.EditRoutePoints
 import org.solidcoder.trackchecker.routes.application.usecases.ApplyRouteScoringPattern
 import org.solidcoder.trackchecker.scoring.application.usecases.TrackCheckActions
 import org.solidcoder.trackchecker.tracks.application.ports.TrackImportSource
+import org.solidcoder.trackchecker.tracks.application.importSequentially
 import org.solidcoder.trackchecker.tracks.domain.model.TrackId
 import org.xml.sax.SAXException
 import org.xmlpull.v1.XmlPullParserException
@@ -139,6 +140,46 @@ class RoutesViewModel(
             } finally {
                 mutableReview.update { state ->
                     if (state is RouteReviewUiState.Loaded) state.copy(importingTrack = false) else state
+                }
+            }
+        }
+    }
+
+    fun importTracks(routeId: RouteId, sources: List<suspend () -> TrackImportSource>) {
+        mutableReview.update { state ->
+            if (state is RouteReviewUiState.Loaded) state.copy(
+                importingTrack = true,
+                trackImportProgress = TrackImportProgress(0, sources.size)
+            ) else state
+        }
+        viewModelScope.launch {
+            try {
+                val result = importSequentially(
+                    sources = sources,
+                    onProgress = { current, total ->
+                        mutableReview.update { state ->
+                            if (state is RouteReviewUiState.Loaded) state.copy(
+                                importingTrack = true,
+                                trackImportProgress = TrackImportProgress(current, total)
+                            ) else state
+                        }
+                    },
+                    process = { source -> trackChecks.importAndEvaluate(routeId, source) }
+                )
+                load(routeId)
+                mutableEvents.send(RoutesUiEvent.Message(
+                    "Importados ${result.succeeded} de ${sources.size}. Fallos: ${result.failed}."
+                ))
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                report(error)
+            } finally {
+                mutableReview.update { state ->
+                    if (state is RouteReviewUiState.Loaded) state.copy(
+                        importingTrack = false,
+                        trackImportProgress = null
+                    ) else state
                 }
             }
         }

@@ -64,16 +64,10 @@ fun RoutesApp(
         }
     }
 
-    val trackFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+    val trackFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         val routeId = navigation.routeId?.let(::RouteId)
-        if (uri != null && routeId != null) scope.launch {
-            try {
-                viewModel.importTrack(routeId, readSelectedTrack(uri))
-            } catch (error: kotlinx.coroutines.CancellationException) {
-                throw error
-            } catch (error: Exception) {
-                viewModel.report(error)
-            }
+        if (uris.isNotEmpty() && routeId != null) {
+            viewModel.importTracks(routeId, uris.map { uri -> { readSelectedTrack(uri) } })
         }
     }
 
@@ -142,7 +136,8 @@ fun RoutesApp(
                     tracks = loaded.tracks,
                     onBack = { navigation = navigation.back() },
                     onImport = { trackFilePicker.launch(arrayOf("*/*")) },
-                    onOpen = { navigation = navigation.openTrackDetail(it.value) }
+                    onOpen = { navigation = navigation.openTrackDetail(it.value) },
+                    importProgress = loaded.trackImportProgress
                 )
             }
         } else if (navigation.destination == TrackDestination.TRACK_DETAIL) {

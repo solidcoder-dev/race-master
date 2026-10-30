@@ -31,6 +31,7 @@ import org.solidcoder.trackchecker.scoring.domain.model.EvaluationStatus
 import org.solidcoder.trackchecker.scoring.domain.model.PassageStatus
 import org.solidcoder.trackchecker.scoring.ui.sortTrackSummaries
 import org.solidcoder.trackchecker.tracks.domain.model.TrackId
+import org.solidcoder.trackchecker.routes.ui.TrackImportProgress
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +41,7 @@ fun TracksListScreen(
     onBack: () -> Unit,
     onImport: () -> Unit,
     onOpen: (TrackId) -> Unit,
+    importProgress: TrackImportProgress? = null,
     modifier: Modifier = Modifier
 ) {
     val sorted = sortTrackSummaries(route, tracks)
@@ -64,6 +66,10 @@ fun TracksListScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            importProgress?.let {
+                Text("Importando ${it.current} de ${it.total}", modifier = Modifier.padding(horizontal = 16.dp),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+            }
             LazyColumn(Modifier.fillMaxWidth()) {
                 itemsIndexed(sorted, key = { _, item -> item.track.id.value }) { index, item ->
                     TrackClassificationRow(index + 1, route, item, onClick = { onOpen(item.track.id) })

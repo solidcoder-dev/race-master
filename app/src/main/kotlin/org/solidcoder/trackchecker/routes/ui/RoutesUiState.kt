@@ -11,6 +11,8 @@ data class RoutesUiState(
     val importing: Boolean = false,
 )
 
+data class TrackImportProgress(val current: Int, val total: Int)
+
 sealed interface RoutesUiEvent {
     data class Message(val text: String, val isError: Boolean = false) : RoutesUiEvent
 }
@@ -24,7 +26,8 @@ sealed interface RouteReviewUiState {
         val tracks: List<EvaluatedTrackSummary> = emptyList(),
         val selectedTrackId: TrackId? = null,
         val selectedTrack: Track? = null,
-        val importingTrack: Boolean = false
+        val importingTrack: Boolean = false,
+        val trackImportProgress: TrackImportProgress? = null
     ) : RouteReviewUiState
     data object NotFound : RouteReviewUiState
     data class Failed(val message: String) : RouteReviewUiState
