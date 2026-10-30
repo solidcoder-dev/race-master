@@ -122,10 +122,7 @@ fun RoutesApp(
                     viewModel.applyPattern(routeId, pattern, replace)
                 },
                 onMarkReady = { viewModel.markReady(routeId) },
-                onImportTrack = { trackFilePicker.launch(arrayOf("*/*")) },
-                onSelectTrack = viewModel::selectTrack,
-                onRecalculateTrack = { viewModel.recalculateTrack(routeId, it) },
-                onDeleteTrack = { viewModel.deleteTrack(routeId, it) }
+                onOpenTracks = { navigation = navigation.openTracks() }
             )
         } else {
             TrackNavigationPlaceholder(navigation.destination, onBack = { navigation = navigation.back() })

@@ -18,7 +18,6 @@ import org.solidcoder.trackchecker.routes.domain.model.*
 import org.solidcoder.trackchecker.routes.ui.RouteReviewUiState
 import org.solidcoder.trackchecker.routes.ui.components.*
 import org.solidcoder.trackchecker.scoring.ui.components.*
-import org.solidcoder.trackchecker.tracks.domain.model.TrackId
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -30,10 +29,7 @@ fun RouteReviewScreen(
     onSetRadius: (DetectionRadius) -> Unit,
     onApplyPattern: (ScoringPattern, Boolean) -> Unit,
     onMarkReady: () -> Unit,
-    onImportTrack: () -> Unit,
-    onSelectTrack: (TrackId?) -> Unit,
-    onRecalculateTrack: (TrackId) -> Unit,
-    onDeleteTrack: (TrackId) -> Unit,
+    onOpenTracks: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val loaded = when (state) {
@@ -52,29 +48,16 @@ fun RouteReviewScreen(
         is RouteReviewUiState.Loaded -> state
     }
     val route = loaded.route
-    val activeTrack = loaded.tracks.firstOrNull { it.track.id == loaded.selectedTrackId }
     val routeReady = route.status == RouteStatus.READY && loaded.issues.none { it.severity == IssueSeverity.ERROR }
-    val passageById = activeTrack?.evaluation?.passageReport?.passages?.associateBy { it.pointId }.orEmpty()
     var editingPointId by remember(route.id) { mutableStateOf<RoutePointId?>(null) }
-    var inspectedPointId by remember(route.id) { mutableStateOf<RoutePointId?>(null) }
-    var trackToDelete by remember(route.id) { mutableStateOf<TrackId?>(null) }
     var selectedIds by remember(route.id) { mutableStateOf<Set<RoutePointId>>(emptySet()) }
     var selectedExpanded by remember(route.id) { mutableStateOf(false) }
     var editingSelected by remember(route.id) { mutableStateOf(false) }
     var settingsOpen by remember(route.id) { mutableStateOf(false) }
     var patternOpen by remember(route.id) { mutableStateOf(false) }
     var showRadii by remember(route.id) { mutableStateOf(false) }
-    val selectionActive = activeTrack == null && selectedIds.isNotEmpty()
-    val selectedPoint = if (activeTrack == null) route.points.firstOrNull { it.id == editingPointId } else null
-
-    LaunchedEffect(activeTrack?.track?.id) {
-        inspectedPointId = null
-        if (activeTrack != null) {
-            selectedIds = emptySet()
-            editingPointId = null
-            editingSelected = false
-        }
-    }
+    val selectionActive = selectedIds.isNotEmpty()
+    val selectedPoint = route.points.firstOrNull { it.id == editingPointId }
 
     fun toggleSelection(id: RoutePointId) {
         selectedIds = if (id in selectedIds) selectedIds - id else selectedIds + id
@@ -82,8 +65,7 @@ fun RouteReviewScreen(
         editingPointId = null
     }
     fun openPoint(id: RoutePointId) {
-        if (activeTrack != null) inspectedPointId = id
-        else if (selectedIds.isNotEmpty()) toggleSelection(id) else editingPointId = id
+        if (selectedIds.isNotEmpty()) toggleSelection(id) else editingPointId = id
     }
 
     val sheetScaffold = rememberBottomSheetScaffoldState()
@@ -99,7 +81,7 @@ fun RouteReviewScreen(
         topBar = {
             RouteReviewHeader(
                 routeName = route.name,
-                selectionCount = if (activeTrack == null) selectedIds.size else 0,
+                selectionCount = selectedIds.size,
                 showDetectionRadii = showRadii,
                 onNavigate = { if (selectionActive) selectedIds = emptySet() else onBack() },
                 onEditSelected = { editingSelected = true },
@@ -126,52 +108,27 @@ fun RouteReviewScreen(
                                 Text(if (selectedExpanded) "Ocultar selección" else "Ver selección (${selectedIds.size})")
                             }
                         } else {
-                            TrackSelectorRow(route.id, loaded.tracks, activeTrack, routeReady, onSelectTrack)
-                            if (activeTrack == null) {
-                                Text("${route.points.size} puntos · ${loaded.issues.size} incidencias",
-                                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                                loaded.issues.firstOrNull()?.let { issue ->
-                                    Text(issue.displayMessage(route),
-                                        color = if (issue.severity == IssueSeverity.ERROR)
-                                            MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                }
-                            } else {
-                                TrackEvaluationSummary(
-                                    activeTrack, route, routeReady,
-                                    loadingGeometry = loaded.selectedTrack?.id != activeTrack.track.id,
-                                    onRecalculate = onRecalculateTrack
-                                )
+                            RouteTracksEntry(
+                                trackCount = loaded.tracks.size,
+                                routeReady = routeReady,
+                                canValidate = loaded.issues.none { it.severity == IssueSeverity.ERROR },
+                                onOpen = onOpenTracks,
+                                onValidate = onMarkReady
+                            )
+                            Text("${route.points.size} puntos · ${loaded.issues.size} incidencias",
+                                style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                            loaded.issues.firstOrNull()?.let { issue ->
+                                Text(issue.displayMessage(route),
+                                    color = if (issue.severity == IssueSeverity.ERROR)
+                                        MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
-                            Button(onClick = if (routeReady) onImportTrack else onMarkReady,
-                                enabled = if (routeReady) !loaded.importingTrack else
-                                    loaded.issues.none { it.severity == IssueSeverity.ERROR },
-                                modifier = Modifier.fillMaxWidth()) {
-                                Text(if (loaded.importingTrack) "Evaluando…" else if (routeReady)
-                                    "Importar track" else "Validar ruta")
-                            }
-                            Text(if (activeTrack == null) "Desliza hacia arriba para ver incidencias y puntos"
-                                 else "Desliza hacia arriba para ver el resultado de cada punto",
+                            Text("Desliza hacia arriba para ver incidencias y puntos",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
-                if (activeTrack != null) {
-                    val contributions = activeTrack.evaluation.score?.contributions
-                        ?.associate { it.pointId to it.points }.orEmpty()
-                    items(route.points, key = { it.id.value }) { point ->
-                        TrackPointResultRow(point, passageById[point.id], contributions[point.id]) {
-                            inspectedPointId = point.id
-                        }
-                    }
-                    item {
-                        TextButton(onClick = { trackToDelete = activeTrack.track.id },
-                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
-                            Text("Eliminar track")
-                        }
-                    }
-                } else {
                 if (selectionActive && selectedExpanded) {
                     item {
                         Column {
@@ -218,7 +175,6 @@ fun RouteReviewScreen(
                     }
                     HorizontalDivider()
                 }
-                }
             }
         }
     ) { contentPadding ->
@@ -227,45 +183,13 @@ fun RouteReviewScreen(
             points = route.points,
             defaultRadius = route.defaultDetectionRadius,
             showDetectionRadii = showRadii,
-            selectedPointId = if (activeTrack == null) editingPointId else inspectedPointId,
-            selectedPointIds = if (activeTrack == null) selectedIds else emptySet(),
-            track = loaded.selectedTrack?.takeIf { it.id == activeTrack?.track?.id },
-            passageStatuses = passageById.mapValues { it.value.status },
+            selectedPointId = editingPointId,
+            selectedPointIds = selectedIds,
+            track = null,
+            passageStatuses = emptyMap(),
             modifier = Modifier.fillMaxSize().padding(contentPadding),
             onPointClick = { openPoint(it) },
-            onPointLongPress = { if (activeTrack == null) toggleSelection(it) }
-        )
-    }
-
-    inspectedPointId?.let { pointId ->
-        if (activeTrack != null) {
-            val point = route.points.firstOrNull { it.id == pointId }
-            val passage = passageById[pointId]
-            if (point != null && passage != null) {
-                val contribution = activeTrack.evaluation.score?.contributions
-                    ?.firstOrNull { it.pointId == pointId }?.points
-                TrackPointDetailsDialog(
-                    point = point,
-                    passage = passage,
-                    contribution = contribution,
-                    onDismiss = { inspectedPointId = null }
-                )
-            }
-        }
-    }
-
-    trackToDelete?.let { trackId ->
-        AlertDialog(
-            onDismissRequest = { trackToDelete = null },
-            title = { Text("¿Eliminar este track?") },
-            text = { Text("Se eliminarán el recorrido importado y su evaluación. La ruta oficial no cambiará.") },
-            confirmButton = { TextButton(onClick = {
-                onDeleteTrack(trackId)
-                trackToDelete = null
-            }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
-                Text("Eliminar")
-            } },
-            dismissButton = { TextButton(onClick = { trackToDelete = null }) { Text("Cancelar") } }
+            onPointLongPress = { toggleSelection(it) }
         )
     }
 
