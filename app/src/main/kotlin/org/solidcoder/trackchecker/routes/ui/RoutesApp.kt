@@ -27,6 +27,7 @@ import org.solidcoder.trackchecker.routes.domain.model.*
 import org.solidcoder.trackchecker.routes.ui.screens.RoutesListScreen
 import org.solidcoder.trackchecker.routes.ui.screens.RouteReviewScreen
 import org.solidcoder.trackchecker.tracks.ui.screens.TracksListScreen
+import org.solidcoder.trackchecker.scoring.ui.screens.TrackDetailScreen
 
 @Composable
 fun RoutesApp(
@@ -140,6 +141,20 @@ fun RoutesApp(
                     onBack = { navigation = navigation.back() },
                     onImport = { trackFilePicker.launch(arrayOf("*/*")) },
                     onOpen = { navigation = navigation.openTrackDetail(it.value) }
+                )
+            }
+        } else if (navigation.destination == TrackDestination.TRACK_DETAIL) {
+            val loaded = reviewState as? RouteReviewUiState.Loaded
+            val selected = loaded?.tracks?.firstOrNull { it.track.id.value == navigation.trackId }
+            if (loaded == null || selected == null) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            } else {
+                TrackDetailScreen(
+                    route = loaded.route,
+                    trackName = selected.track.name,
+                    evaluation = selected.evaluation,
+                    onBack = { navigation = navigation.back() },
+                    onMap = { navigation = navigation.openTrackMap() }
                 )
             }
         } else {
