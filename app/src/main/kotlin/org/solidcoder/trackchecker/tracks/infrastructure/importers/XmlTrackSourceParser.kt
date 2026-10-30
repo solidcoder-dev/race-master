@@ -109,19 +109,19 @@ class XmlTrackSourceParser(
             when (parser.eventType) {
                 XmlPullParser.DOCDECL -> error("El archivo XML contiene una declaración no permitida")
                 XmlPullParser.START_TAG -> when {
-                    isKmlTag(parser.name, "LineString") -> lineDepth = parser.depth
-                    isGxTag(parser.name, "Track") -> {
+                    isCoreKmlTag(parser.name, "LineString") -> lineDepth = parser.depth
+                    isGoogleExtensionTag(parser.name, "Track") -> {
                         trackDepth = parser.depth
                         coordinates = mutableListOf()
                         timestamps = mutableListOf()
                     }
-                    lineDepth > 0 && parser.depth == lineDepth + 1 && isKmlTag(parser.name, "coordinates") -> {
+                    lineDepth > 0 && parser.depth == lineDepth + 1 && isCoreKmlTag(parser.name, "coordinates") -> {
                         val points = parser.nextText().trim().split(Regex("\\s+"))
                             .filter { it.isNotBlank() }
                             .map(::parseKmlCoordinate)
                         if (points.isNotEmpty()) segments.add(TrackSegment(points))
                     }
-                    trackDepth > 0 && parser.depth == trackDepth + 1 && isGxTag(parser.name, "coord") -> {
+                    trackDepth > 0 && parser.depth == trackDepth + 1 && isGoogleExtensionTag(parser.name, "coord") -> {
                         val values = parser.nextText().trim().split(Regex("\\s+"))
                         require(values.size >= 2) { "Coordenada gx:Track incompleta" }
                         coordinates.add(GpsSample(values[1].toDouble(), values[0].toDouble()))
@@ -131,8 +131,8 @@ class XmlTrackSourceParser(
                     }
                 }
                 XmlPullParser.END_TAG -> when {
-                    isKmlTag(parser.name, "LineString") && parser.depth == lineDepth -> lineDepth = -1
-                    isGxTag(parser.name, "Track") && parser.depth == trackDepth -> {
+                    isCoreKmlTag(parser.name, "LineString") && parser.depth == lineDepth -> lineDepth = -1
+                    isGoogleExtensionTag(parser.name, "Track") && parser.depth == trackDepth -> {
                         if (coordinates.isNotEmpty()) {
                             val samples = coordinates.mapIndexed { index, point ->
                                 point.copy(timestampEpochMs = timestamps.getOrNull(index))
@@ -176,9 +176,9 @@ class XmlTrackSourceParser(
 
     private fun localName(name: String?): String = name?.substringAfter(':').orEmpty()
 
-    private fun isKmlTag(name: String?, expected: String): Boolean = name == expected
+    private fun isCoreKmlTag(name: String?, expected: String): Boolean = name == expected
 
-    private fun isGxTag(name: String?, expected: String): Boolean = name == "gx:$expected"
+    private fun isGoogleExtensionTag(name: String?, expected: String): Boolean = name == "gx:$expected"
 
     private fun XmlPullParser.configure(bytes: ByteArray, processNamespaces: Boolean): XmlPullParser = apply {
         setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, processNamespaces)
