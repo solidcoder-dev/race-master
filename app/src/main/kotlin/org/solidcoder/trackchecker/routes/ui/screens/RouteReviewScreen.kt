@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import org.solidcoder.trackchecker.routes.domain.model.*
 import org.solidcoder.trackchecker.routes.ui.RouteReviewUiState
 import org.solidcoder.trackchecker.routes.ui.components.*
-import org.solidcoder.trackchecker.scoring.ui.components.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable

@@ -123,28 +123,6 @@ class RoutesViewModel(
         }
     }
 
-    fun importTrack(routeId: RouteId, source: TrackImportSource) {
-        mutableReview.update { state ->
-            if (state is RouteReviewUiState.Loaded) state.copy(importingTrack = true) else state
-        }
-        viewModelScope.launch {
-            try {
-                val imported = trackChecks.importAndEvaluate(routeId, source)
-                load(routeId)
-                selectTrack(imported.track.id)
-                mutableEvents.send(RoutesUiEvent.Message("Track evaluado correctamente."))
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: Exception) {
-                report(error)
-            } finally {
-                mutableReview.update { state ->
-                    if (state is RouteReviewUiState.Loaded) state.copy(importingTrack = false) else state
-                }
-            }
-        }
-    }
-
     fun importTracks(routeId: RouteId, sources: List<suspend () -> TrackImportSource>) {
         mutableReview.update { state ->
             if (state is RouteReviewUiState.Loaded) state.copy(
